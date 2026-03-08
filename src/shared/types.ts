@@ -71,4 +71,6 @@ export interface ElectronAPI {
   onPullComplete: (callback: (result: PullComplete) => void) => () => void
   openUrl: (url: string) => void
   getLogPath: () => Promise<string>
+  togglePin: () => Promise<boolean>
+  getPinned: () => Promise<boolean>
 }

@@ -38,7 +38,9 @@ const api: ElectronAPI = {
     return () => ipcRenderer.removeListener(IPC.PULL_COMPLETE, handler)
   },
   openUrl: (url: string) => ipcRenderer.send(IPC.OPEN_URL, url),
-  getLogPath: () => ipcRenderer.invoke(IPC.GET_LOG_PATH)
+  getLogPath: () => ipcRenderer.invoke(IPC.GET_LOG_PATH),
+  togglePin: () => ipcRenderer.invoke(IPC.TOGGLE_PIN),
+  getPinned: () => ipcRenderer.invoke(IPC.GET_PINNED)
 }
 
 if (process.contextIsolated) {

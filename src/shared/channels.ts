@@ -17,5 +17,8 @@ export const IPC = {
   PULL_PROGRESS: 'ollama:pull-progress',
   PULL_COMPLETE: 'ollama:pull-complete',
   OPEN_URL: 'ollama:open-url',
-  GET_LOG_PATH: 'ollama:get-log-path'
+  GET_LOG_PATH: 'ollama:get-log-path',
+
+  TOGGLE_PIN: 'window:toggle-pin',
+  GET_PINNED: 'window:get-pinned'
 } as const
