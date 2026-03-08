@@ -29,6 +29,9 @@ All API calls go through `src/main/ollama/api.ts`. The base URL is resolved from
 | `/api/blobs/sha256:<digest>` | HEAD | Check if blob exists |
 | `/api/blobs/sha256:<digest>` | POST | Upload file as blob (streaming body) |
 | `/api/create` | POST | Create model from blobs (streaming response) |
+| `/api/show` | POST | Get model details (format, family, params, etc.) |
+| `/api/copy` | POST | Copy model to a new name |
+| `/api/ps` | GET | List currently running models |
 
 ### GGUF Model Import Flow (Critical)
 
@@ -149,10 +152,16 @@ All channels are defined in `src/shared/channels.ts`. The preload bridge (`src/p
 | `ollama:scan-gguf-models` | invoke | Scan for local GGUF files |
 | `ollama:import-model` | invoke | Import GGUF model (blob upload + create) |
 | `ollama:get-log-path` | invoke | Get current log file path |
+| `ollama:show-model` | invoke | Get model details (POST /api/show) |
+| `ollama:copy-model` | invoke | Copy model to new name |
+| `ollama:create-from-model` | invoke | Create variant from existing model |
+| `ollama:get-usage-stats` | invoke | Get model usage statistics |
 | `ollama:open-url` | send | Open URL in default browser |
 | `ollama:status-changed` | event | Broadcast status changes |
 | `ollama:pull-progress` | event | Broadcast pull progress |
 | `ollama:pull-complete` | event | Broadcast pull completion |
+| `ollama:create-progress` | event | Broadcast model creation progress |
+| `ollama:create-complete` | event | Broadcast model creation completion |
 
 ## Configurable Ollama Host
 

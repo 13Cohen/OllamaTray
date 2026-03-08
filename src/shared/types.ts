@@ -46,6 +46,30 @@ export interface OllamaConfig {
   defaultModelsDir: string
 }
 
+export interface ModelShowResponse {
+  modelfile: string
+  parameters: string
+  template: string
+  system: string
+  details: OllamaModelDetails
+  model_info: Record<string, unknown>
+  license?: string
+}
+
+export interface CreateFromModelRequest {
+  model: string
+  from: string
+  system?: string
+  template?: string
+  parameters?: Record<string, unknown>
+}
+
+export interface ModelUsageStats {
+  useCount: number
+  lastUsedAt: string
+  firstUsedAt: string
+}
+
 export interface GgufFileInfo {
   filePaths: string[]
   fileName: string
@@ -69,6 +93,12 @@ export interface ElectronAPI {
   onStatusChanged: (callback: (status: OllamaStatus) => void) => () => void
   onPullProgress: (callback: (progress: PullProgress) => void) => () => void
   onPullComplete: (callback: (result: PullComplete) => void) => () => void
+  showModel: (name: string) => Promise<ModelShowResponse>
+  copyModel: (source: string, destination: string) => Promise<void>
+  createFromModel: (request: CreateFromModelRequest) => Promise<void>
+  getUsageStats: () => Promise<Record<string, ModelUsageStats>>
+  onCreateProgress: (callback: (progress: PullProgress) => void) => () => void
+  onCreateComplete: (callback: (result: PullComplete) => void) => () => void
   openUrl: (url: string) => void
   getLogPath: () => Promise<string>
   togglePin: () => Promise<boolean>

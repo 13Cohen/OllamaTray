@@ -13,7 +13,14 @@ export const IPC = {
   SCAN_GGUF_MODELS: 'ollama:scan-gguf-models',
   IMPORT_MODEL: 'ollama:import-model',
 
+  SHOW_MODEL: 'ollama:show-model',
+  COPY_MODEL: 'ollama:copy-model',
+  CREATE_FROM_MODEL: 'ollama:create-from-model',
+  GET_USAGE_STATS: 'ollama:get-usage-stats',
+
   STATUS_CHANGED: 'ollama:status-changed',
+  CREATE_PROGRESS: 'ollama:create-progress',
+  CREATE_COMPLETE: 'ollama:create-complete',
   PULL_PROGRESS: 'ollama:pull-progress',
   PULL_COMPLETE: 'ollama:pull-complete',
   OPEN_URL: 'ollama:open-url',

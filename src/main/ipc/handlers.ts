@@ -3,8 +3,8 @@ import { join, dirname } from 'path'
 import { homedir } from 'os'
 import { readdir, stat } from 'fs/promises'
 import { IPC } from '../../shared/channels'
-import type { GgufFileInfo } from '../../shared/types'
-import { checkHealth, getVersion, listModels, deleteModel, pullModel, createModel, cancelPull } from '../ollama/api'
+import type { GgufFileInfo, CreateFromModelRequest } from '../../shared/types'
+import { checkHealth, getVersion, listModels, deleteModel, pullModel, createModel, cancelPull, showModel, copyModel, createFromModel } from '../ollama/api'
 import { startOllama, stopOllama, detectStartupSource } from '../ollama/service'
 import type { OllamaConfig, OllamaStatus } from '../../shared/types'
 import store from '../store'
@@ -202,5 +202,40 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
 
   ipcMain.handle(IPC.GET_LOG_PATH, () => {
     return getLogPath()
+  })
+
+  // Phase 2: Model Details
+  ipcMain.handle(IPC.SHOW_MODEL, async (_event, name: string) => {
+    return showModel(name)
+  })
+
+  // Phase 2: Model Copy
+  ipcMain.handle(IPC.COPY_MODEL, async (_event, source: string, destination: string) => {
+    await copyModel(source, destination)
+  })
+
+  // Phase 2: Model Customize (create variant from existing model)
+  ipcMain.handle(IPC.CREATE_FROM_MODEL, async (event, request: CreateFromModelRequest) => {
+    const win = getWindow()
+    const sender = win?.webContents ?? event.sender
+
+    await createFromModel(
+      request,
+      (progress) => {
+        if (!sender.isDestroyed()) {
+          sender.send(IPC.CREATE_PROGRESS, progress)
+        }
+      },
+      (success, error) => {
+        if (!sender.isDestroyed()) {
+          sender.send(IPC.CREATE_COMPLETE, { modelName: request.model, success, error })
+        }
+      }
+    )
+  })
+
+  // Phase 2: Usage Stats
+  ipcMain.handle(IPC.GET_USAGE_STATS, () => {
+    return store.get('modelUsageStats')
   })
 }
