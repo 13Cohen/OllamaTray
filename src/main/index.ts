@@ -15,37 +15,17 @@ function getWindow(): BrowserWindow | null {
   return window
 }
 
-function createTrayIcon(color: 'gray' | 'green'): Electron.NativeImage {
-  const size = isWin ? 16 : 22
-  const scaleFactor = 2
-  const px = size * scaleFactor
-  const r = (color === 'green') ? 0x34 : 0x9C
-  const g = (color === 'green') ? 0xD3 : 0xA3
-  const b = (color === 'green') ? 0x99 : 0xAF
+function trayIconPath(name: string): string {
+  return join(__dirname, '../../resources', name)
+}
 
-  const buf = Buffer.alloc(px * px * 4)
-  const cx = px / 2
-  const cy = px / 2
-  const radius = px / 2 - 2 * scaleFactor
-
-  for (let y = 0; y < px; y++) {
-    for (let x = 0; x < px; x++) {
-      const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2)
-      const i = (y * px + x) * 4
-      if (dist <= radius) {
-        buf[i] = r
-        buf[i + 1] = g
-        buf[i + 2] = b
-        buf[i + 3] = 255
-      }
-    }
+function createTrayIcon(running: boolean): Electron.NativeImage {
+  if (isWin) {
+    const file = running ? 'tray-win-running.png' : 'tray-win-stopped.png'
+    return nativeImage.createFromPath(trayIconPath(file))
   }
-
-  return nativeImage.createFromBuffer(buf, {
-    width: px,
-    height: px,
-    scaleFactor
-  })
+  const file = running ? 'tray-running.png' : 'tray-stopped.png'
+  return nativeImage.createFromPath(trayIconPath(file))
 }
 
 function createWindow(): BrowserWindow {
@@ -136,7 +116,7 @@ function showWindow(): void {
 
 function updateTrayIcon(running: boolean): void {
   if (tray) {
-    tray.setImage(createTrayIcon(running ? 'green' : 'gray'))
+    tray.setImage(createTrayIcon(running))
     tray.setToolTip(running ? 'Ollama: Running' : 'Ollama: Stopped')
   }
 }
@@ -146,7 +126,7 @@ app.whenReady().then(() => {
     app.dock?.hide()
   }
 
-  tray = new Tray(createTrayIcon('gray'))
+  tray = new Tray(createTrayIcon(false))
   tray.setToolTip('OllamaTray')
   tray.on('click', showWindow)
 
