@@ -1,16 +1,19 @@
-import { dialog, ipcMain, shell, type BrowserWindow } from 'electron'
+import { app, dialog, ipcMain, nativeTheme, shell, type BrowserWindow } from 'electron'
 import { join, dirname } from 'path'
 import { homedir } from 'os'
 import { readdir, stat } from 'fs/promises'
 import { IPC } from '../../shared/channels'
-import type { GgufFileInfo, CreateFromModelRequest } from '../../shared/types'
-import { checkHealth, getVersion, listModels, deleteModel, pullModel, createModel, cancelPull, showModel, copyModel, createFromModel } from '../ollama/api'
+import type { GgufFileInfo, CreateFromModelRequest, ThemeMode } from '../../shared/types'
+import { checkHealth, getVersion, listModels, listRunning, unloadModel, deleteModel, pullModel, createModel, cancelPull, showModel, copyModel, createFromModel } from '../ollama/api'
 import { startOllama, stopOllama, detectStartupSource } from '../ollama/service'
 import type { OllamaConfig, OllamaStatus } from '../../shared/types'
 import store from '../store'
 import { createLogger, getLogPath } from '../logger'
+import { notifyPullComplete, notifyImportComplete } from '../notifications'
 
 const log = createLogger('ipc')
+
+const isMac = process.platform === 'darwin'
 
 function getDefaultModelsDir(): string {
   return join(homedir(), '.ollama', 'models')
@@ -29,7 +32,7 @@ function getServiceEnvVars(): Record<string, string> {
   return { ...env, ...store.get('envVars') }
 }
 
-export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void {
+export function registerIpcHandlers(getWindow: () => BrowserWindow | null, onBeforeStop?: () => void): void {
   ipcMain.handle(IPC.GET_CONFIG, (): OllamaConfig => {
     return {
       ollamaHost: store.get('ollamaHost'),
@@ -142,6 +145,7 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
         if (!sender.isDestroyed()) {
           sender.send(IPC.PULL_COMPLETE, { modelName: name, success, error })
         }
+        notifyImportComplete(name, success, error, getWindow)
       }
     )
   })
@@ -166,11 +170,20 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
   })
 
   ipcMain.handle(IPC.STOP_SERVICE, async () => {
+    onBeforeStop?.()
     stopOllama()
   })
 
   ipcMain.handle(IPC.LIST_MODELS, async () => {
     return listModels()
+  })
+
+  ipcMain.handle(IPC.LIST_RUNNING, async () => {
+    return listRunning()
+  })
+
+  ipcMain.handle(IPC.UNLOAD_MODEL, async (_event, name: string) => {
+    await unloadModel(name)
   })
 
   ipcMain.handle(IPC.DELETE_MODEL, async (_event, name: string) => {
@@ -192,6 +205,7 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
         if (!sender.isDestroyed()) {
           sender.send(IPC.PULL_COMPLETE, { modelName: name, success, error })
         }
+        notifyPullComplete(name, success, error, getWindow)
       }
     )
   })
@@ -237,5 +251,41 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
   // Phase 2: Usage Stats
   ipcMain.handle(IPC.GET_USAGE_STATS, () => {
     return store.get('modelUsageStats')
+  })
+
+  // Launch at Login
+  ipcMain.handle(IPC.GET_LAUNCH_AT_LOGIN, () => {
+    return store.get('launchAtLogin')
+  })
+
+  ipcMain.handle(IPC.SET_LAUNCH_AT_LOGIN, (_event, enabled: boolean) => {
+    store.set('launchAtLogin', enabled)
+    app.setLoginItemSettings({
+      openAtLogin: enabled,
+      ...(isMac ? { openAsHidden: true } : {})
+    })
+  })
+
+  // Theme
+  ipcMain.handle(IPC.GET_THEME, () => {
+    return store.get('theme')
+  })
+
+  ipcMain.handle(IPC.SET_THEME, (_event, theme: ThemeMode) => {
+    store.set('theme', theme)
+    nativeTheme.themeSource = theme
+    const win = getWindow()
+    if (win && !win.isDestroyed()) {
+      win.webContents.send(IPC.THEME_CHANGED, nativeTheme.shouldUseDarkColors)
+    }
+  })
+
+  // Notifications
+  ipcMain.handle(IPC.GET_NOTIFICATIONS_ENABLED, () => {
+    return store.get('notificationsEnabled')
+  })
+
+  ipcMain.handle(IPC.SET_NOTIFICATIONS_ENABLED, (_event, enabled: boolean) => {
+    store.set('notificationsEnabled', enabled)
   })
 }

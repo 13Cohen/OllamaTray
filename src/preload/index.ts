@@ -12,6 +12,8 @@ const api: ElectronAPI = {
   startService: () => ipcRenderer.invoke(IPC.START_SERVICE),
   stopService: () => ipcRenderer.invoke(IPC.STOP_SERVICE),
   listModels: () => ipcRenderer.invoke(IPC.LIST_MODELS),
+  listRunning: () => ipcRenderer.invoke(IPC.LIST_RUNNING),
+  unloadModel: (name: string) => ipcRenderer.invoke(IPC.UNLOAD_MODEL, name),
   deleteModel: (name: string) => ipcRenderer.invoke(IPC.DELETE_MODEL, name),
   pullModel: (name: string) => ipcRenderer.invoke(IPC.PULL_MODEL, name),
   cancelPull: (name: string) => ipcRenderer.invoke(IPC.CANCEL_PULL, name),
@@ -55,10 +57,23 @@ const api: ElectronAPI = {
     ipcRenderer.on(IPC.CREATE_COMPLETE, handler)
     return () => ipcRenderer.removeListener(IPC.CREATE_COMPLETE, handler)
   },
+  onThemeChanged: (callback) => {
+    const handler = (_event: Electron.IpcRendererEvent, ...args: unknown[]): void => {
+      callback(args[0] as boolean)
+    }
+    ipcRenderer.on(IPC.THEME_CHANGED, handler)
+    return () => ipcRenderer.removeListener(IPC.THEME_CHANGED, handler)
+  },
   openUrl: (url: string) => ipcRenderer.send(IPC.OPEN_URL, url),
   getLogPath: () => ipcRenderer.invoke(IPC.GET_LOG_PATH),
   togglePin: () => ipcRenderer.invoke(IPC.TOGGLE_PIN),
-  getPinned: () => ipcRenderer.invoke(IPC.GET_PINNED)
+  getPinned: () => ipcRenderer.invoke(IPC.GET_PINNED),
+  getLaunchAtLogin: () => ipcRenderer.invoke(IPC.GET_LAUNCH_AT_LOGIN),
+  setLaunchAtLogin: (enabled: boolean) => ipcRenderer.invoke(IPC.SET_LAUNCH_AT_LOGIN, enabled),
+  getTheme: () => ipcRenderer.invoke(IPC.GET_THEME),
+  setTheme: (theme) => ipcRenderer.invoke(IPC.SET_THEME, theme),
+  getNotificationsEnabled: () => ipcRenderer.invoke(IPC.GET_NOTIFICATIONS_ENABLED),
+  setNotificationsEnabled: (enabled: boolean) => ipcRenderer.invoke(IPC.SET_NOTIFICATIONS_ENABLED, enabled)
 }
 
 if (process.contextIsolated) {

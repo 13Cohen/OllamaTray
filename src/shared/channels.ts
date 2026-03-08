@@ -24,8 +24,18 @@ export const IPC = {
   PULL_PROGRESS: 'ollama:pull-progress',
   PULL_COMPLETE: 'ollama:pull-complete',
   OPEN_URL: 'ollama:open-url',
+  LIST_RUNNING: 'ollama:list-running',
+  UNLOAD_MODEL: 'ollama:unload-model',
   GET_LOG_PATH: 'ollama:get-log-path',
 
   TOGGLE_PIN: 'window:toggle-pin',
-  GET_PINNED: 'window:get-pinned'
+  GET_PINNED: 'window:get-pinned',
+
+  GET_LAUNCH_AT_LOGIN: 'app:get-launch-at-login',
+  SET_LAUNCH_AT_LOGIN: 'app:set-launch-at-login',
+  GET_THEME: 'app:get-theme',
+  SET_THEME: 'app:set-theme',
+  THEME_CHANGED: 'app:theme-changed',
+  GET_NOTIFICATIONS_ENABLED: 'app:get-notifications-enabled',
+  SET_NOTIFICATIONS_ENABLED: 'app:set-notifications-enabled'
 } as const

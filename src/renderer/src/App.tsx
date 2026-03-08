@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ServiceStatus } from './components/ServiceStatus'
+import { RunningModels } from './components/RunningModels'
 import { ModelList } from './components/ModelList'
 import { PullModelInput } from './components/PullModelInput'
 import { PullProgress } from './components/PullProgress'
@@ -7,6 +8,10 @@ import { ErrorBanner } from './components/ErrorBanner'
 import { VersionWarning } from './components/VersionWarning'
 import { Settings } from './components/Settings'
 import { useOllamaStore } from './stores/useOllamaStore'
+
+function applyThemeClass(shouldUseDark: boolean): void {
+  document.documentElement.classList.toggle('dark', shouldUseDark)
+}
 
 function App(): React.JSX.Element {
   const fetchStatus = useOllamaStore((s) => s.fetchStatus)
@@ -20,6 +25,9 @@ function App(): React.JSX.Element {
 
   useEffect(() => {
     fetchStatus()
+
+    // Initialize theme from system preference, main process will send correct value
+    applyThemeClass(window.matchMedia('(prefers-color-scheme: dark)').matches)
 
     const unsubStatus = window.electronAPI.onStatusChanged((newStatus) => {
       setStatus(newStatus)
@@ -47,12 +55,17 @@ function App(): React.JSX.Element {
       }
     })
 
+    const unsubTheme = window.electronAPI.onThemeChanged((shouldUseDark) => {
+      applyThemeClass(shouldUseDark)
+    })
+
     return () => {
       unsubStatus()
       unsubProgress()
       unsubComplete()
       unsubCreateProgress()
       unsubCreateComplete()
+      unsubTheme()
     }
   }, [])
 
@@ -76,6 +89,7 @@ function App(): React.JSX.Element {
       <ErrorBanner />
       <VersionWarning />
       <ServiceStatus onOpenSettings={() => setView('settings')} />
+      <RunningModels />
       <ModelList />
       <PullProgress />
       <PullModelInput />
