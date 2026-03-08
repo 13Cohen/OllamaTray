@@ -40,6 +40,7 @@ interface OllamaState {
   stopService: () => Promise<void>
   deleteModel: (name: string) => Promise<void>
   pullModel: (name: string) => Promise<void>
+  importModel: (name: string, filePaths: string[]) => Promise<void>
   cancelPull: (name: string) => Promise<void>
 }
 
@@ -183,6 +184,15 @@ export const useOllamaStore = create<OllamaState>((set, get) => ({
       await window.electronAPI.pullModel(name)
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Failed to pull model' })
+    }
+  },
+
+  importModel: async (name, filePaths) => {
+    try {
+      set({ error: null })
+      await window.electronAPI.importModel(name, filePaths)
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed to import model' })
     }
   },
 
