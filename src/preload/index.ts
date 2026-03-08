@@ -31,7 +31,9 @@ const api: ElectronAPI = {
     }
     ipcRenderer.on(IPC.PULL_COMPLETE, handler)
     return () => ipcRenderer.removeListener(IPC.PULL_COMPLETE, handler)
-  }
+  },
+  togglePin: () => ipcRenderer.invoke(IPC.TOGGLE_PIN),
+  getPinned: () => ipcRenderer.invoke(IPC.GET_PINNED)
 }
 
 if (process.contextIsolated) {

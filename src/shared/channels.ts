@@ -9,5 +9,8 @@ export const IPC = {
 
   STATUS_CHANGED: 'ollama:status-changed',
   PULL_PROGRESS: 'ollama:pull-progress',
-  PULL_COMPLETE: 'ollama:pull-complete'
+  PULL_COMPLETE: 'ollama:pull-complete',
+
+  TOGGLE_PIN: 'window:toggle-pin',
+  GET_PINNED: 'window:get-pinned'
 } as const

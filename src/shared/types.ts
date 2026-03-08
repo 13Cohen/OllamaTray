@@ -48,4 +48,6 @@ export interface ElectronAPI {
   onStatusChanged: (callback: (status: OllamaStatus) => void) => () => void
   onPullProgress: (callback: (progress: PullProgress) => void) => () => void
   onPullComplete: (callback: (result: PullComplete) => void) => () => void
+  togglePin: () => Promise<boolean>
+  getPinned: () => Promise<boolean>
 }
