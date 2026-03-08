@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Power, Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Power, Loader2, Pin, PinOff } from 'lucide-react'
 import { Button } from '@renderer/components/ui/button'
 import {
   Dialog,
@@ -16,6 +16,16 @@ export function ServiceStatus(): React.JSX.Element {
   const startService = useOllamaStore((s) => s.startService)
   const stopService = useOllamaStore((s) => s.stopService)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [pinned, setPinned] = useState(false)
+
+  useEffect(() => {
+    window.electronAPI.getPinned().then(setPinned)
+  }, [])
+
+  const handleTogglePin = async (): Promise<void> => {
+    const newState = await window.electronAPI.togglePin()
+    setPinned(newState)
+  }
 
   const handleToggle = (): void => {
     if (status.running) {
@@ -63,19 +73,34 @@ export function ServiceStatus(): React.JSX.Element {
             )}
           </div>
         </div>
-        <Button
-          variant={status.running ? 'outline' : 'default'}
-          size="sm"
-          onClick={handleToggle}
-          disabled={loading}
-        >
-          {loading ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Power className="h-3.5 w-3.5" />
-          )}
-          {status.running ? 'Stop' : 'Start'}
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={handleTogglePin}
+            title={pinned ? '取消常驻' : '常驻面板'}
+          >
+            {pinned ? (
+              <Pin className="h-3.5 w-3.5 text-primary" />
+            ) : (
+              <PinOff className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+          </Button>
+          <Button
+            variant={status.running ? 'outline' : 'default'}
+            size="sm"
+            onClick={handleToggle}
+            disabled={loading}
+          >
+            {loading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Power className="h-3.5 w-3.5" />
+            )}
+            {status.running ? 'Stop' : 'Start'}
+          </Button>
+        </div>
       </div>
 
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>

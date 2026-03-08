@@ -1,15 +1,17 @@
-import { app, BrowserWindow, Menu, Tray, nativeImage, screen } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, screen } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc/handlers'
 import { startPolling, stopPolling, setOnStatusChange, getLastStatus } from './ollama/status-poller'
 import { cleanupManagedProcess, startOllama, stopOllama } from './ollama/service'
+import { IPC } from '../shared/channels'
 
 const isMac = process.platform === 'darwin'
 const isWin = process.platform === 'win32'
 
 let tray: Tray | null = null
 let window: BrowserWindow | null = null
+let pinned = false
 
 function getWindow(): BrowserWindow | null {
   return window
@@ -65,7 +67,9 @@ function createWindow(): BrowserWindow {
   }
 
   win.on('blur', () => {
-    win.hide()
+    if (!pinned) {
+      win.hide()
+    }
   })
 
   return win
@@ -165,6 +169,18 @@ app.whenReady().then(() => {
   window = createWindow()
 
   registerIpcHandlers(getWindow)
+
+  ipcMain.handle(IPC.TOGGLE_PIN, () => {
+    pinned = !pinned
+    if (window && !window.isDestroyed()) {
+      window.setAlwaysOnTop(pinned)
+    }
+    return pinned
+  })
+
+  ipcMain.handle(IPC.GET_PINNED, () => {
+    return pinned
+  })
 
   setOnStatusChange((status) => {
     updateTrayIcon(status.running)
