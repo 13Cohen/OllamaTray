@@ -39,6 +39,24 @@ const api: ElectronAPI = {
     ipcRenderer.on(IPC.PULL_COMPLETE, handler)
     return () => ipcRenderer.removeListener(IPC.PULL_COMPLETE, handler)
   },
+  showModel: (name) => ipcRenderer.invoke(IPC.SHOW_MODEL, name),
+  copyModel: (source, destination) => ipcRenderer.invoke(IPC.COPY_MODEL, source, destination),
+  createFromModel: (request) => ipcRenderer.invoke(IPC.CREATE_FROM_MODEL, request),
+  getUsageStats: () => ipcRenderer.invoke(IPC.GET_USAGE_STATS),
+  onCreateProgress: (callback) => {
+    const handler = (_event: Electron.IpcRendererEvent, ...args: unknown[]): void => {
+      callback(args[0] as Parameters<typeof callback>[0])
+    }
+    ipcRenderer.on(IPC.CREATE_PROGRESS, handler)
+    return () => ipcRenderer.removeListener(IPC.CREATE_PROGRESS, handler)
+  },
+  onCreateComplete: (callback) => {
+    const handler = (_event: Electron.IpcRendererEvent, ...args: unknown[]): void => {
+      callback(args[0] as Parameters<typeof callback>[0])
+    }
+    ipcRenderer.on(IPC.CREATE_COMPLETE, handler)
+    return () => ipcRenderer.removeListener(IPC.CREATE_COMPLETE, handler)
+  },
   onThemeChanged: (callback) => {
     const handler = (_event: Electron.IpcRendererEvent, ...args: unknown[]): void => {
       callback(args[0] as boolean)

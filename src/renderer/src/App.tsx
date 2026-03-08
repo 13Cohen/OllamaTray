@@ -16,6 +16,7 @@ function applyThemeClass(shouldUseDark: boolean): void {
 function App(): React.JSX.Element {
   const fetchStatus = useOllamaStore((s) => s.fetchStatus)
   const fetchModels = useOllamaStore((s) => s.fetchModels)
+  const fetchUsageStats = useOllamaStore((s) => s.fetchUsageStats)
   const setStatus = useOllamaStore((s) => s.setStatus)
   const updatePullProgress = useOllamaStore((s) => s.updatePullProgress)
   const removePullProgress = useOllamaStore((s) => s.removePullProgress)
@@ -43,6 +44,17 @@ function App(): React.JSX.Element {
       }
     })
 
+    const unsubCreateProgress = window.electronAPI.onCreateProgress((progress) => {
+      updatePullProgress(progress)
+    })
+
+    const unsubCreateComplete = window.electronAPI.onCreateComplete((result) => {
+      removePullProgress(result.modelName)
+      if (result.success) {
+        fetchModels()
+      }
+    })
+
     const unsubTheme = window.electronAPI.onThemeChanged((shouldUseDark) => {
       applyThemeClass(shouldUseDark)
     })
@@ -51,6 +63,8 @@ function App(): React.JSX.Element {
       unsubStatus()
       unsubProgress()
       unsubComplete()
+      unsubCreateProgress()
+      unsubCreateComplete()
       unsubTheme()
     }
   }, [])
@@ -58,6 +72,7 @@ function App(): React.JSX.Element {
   useEffect(() => {
     if (status.running) {
       fetchModels()
+      fetchUsageStats()
     }
   }, [status.running])
 

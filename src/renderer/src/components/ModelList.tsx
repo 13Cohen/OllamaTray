@@ -5,6 +5,9 @@ import { Button } from '@renderer/components/ui/button'
 import { ScrollArea } from '@renderer/components/ui/scroll-area'
 import { ModelItem } from './ModelItem'
 import { ModelDeleteDialog } from './ModelDeleteDialog'
+import { ModelDetailDialog } from './ModelDetailDialog'
+import { ModelCopyDialog } from './ModelCopyDialog'
+import { ModelCustomizeDialog } from './ModelCustomizeDialog'
 import { useOllamaStore, useFilteredModels } from '@renderer/stores/useOllamaStore'
 import type { OllamaModel } from '../../../shared/types'
 
@@ -16,9 +19,13 @@ export function ModelList(): React.JSX.Element {
   const setSortBy = useOllamaStore((s) => s.setSortBy)
   const toggleSortOrder = useOllamaStore((s) => s.toggleSortOrder)
   const deleteModel = useOllamaStore((s) => s.deleteModel)
+  const usageStats = useOllamaStore((s) => s.usageStats)
   const filteredModels = useFilteredModels()
 
   const [deleteTarget, setDeleteTarget] = useState<OllamaModel | null>(null)
+  const [detailTarget, setDetailTarget] = useState<OllamaModel | null>(null)
+  const [copyTarget, setCopyTarget] = useState<OllamaModel | null>(null)
+  const [customizeTarget, setCustomizeTarget] = useState<OllamaModel | null>(null)
 
   if (!status.running) {
     return (
@@ -66,7 +73,13 @@ export function ModelList(): React.JSX.Element {
         ) : (
           <div className="divide-y divide-border/30">
             {filteredModels.map((model) => (
-              <ModelItem key={model.digest} model={model} onDelete={setDeleteTarget} />
+              <ModelItem
+                key={model.digest}
+                model={model}
+                stats={usageStats[model.name]}
+                onDelete={setDeleteTarget}
+                onSelect={setDetailTarget}
+              />
             ))}
           </div>
         )}
@@ -82,6 +95,32 @@ export function ModelList(): React.JSX.Element {
             setDeleteTarget(null)
           }
         }}
+      />
+
+      <ModelDetailDialog
+        model={detailTarget}
+        open={!!detailTarget}
+        onOpenChange={(open) => !open && setDetailTarget(null)}
+        onCopy={(m) => {
+          setDetailTarget(null)
+          setCopyTarget(m)
+        }}
+        onCustomize={(m) => {
+          setDetailTarget(null)
+          setCustomizeTarget(m)
+        }}
+      />
+
+      <ModelCopyDialog
+        model={copyTarget}
+        open={!!copyTarget}
+        onOpenChange={(open) => !open && setCopyTarget(null)}
+      />
+
+      <ModelCustomizeDialog
+        model={customizeTarget}
+        open={!!customizeTarget}
+        onOpenChange={(open) => !open && setCustomizeTarget(null)}
       />
     </>
   )

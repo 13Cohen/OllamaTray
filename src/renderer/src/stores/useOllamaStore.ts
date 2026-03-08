@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { OllamaModel, OllamaStatus, PullProgress, RunningModel } from '../../../shared/types'
+import type { OllamaModel, OllamaStatus, PullProgress, RunningModel, ModelShowResponse, CreateFromModelRequest, ModelUsageStats } from '../../../shared/types'
 
 export type SortBy = 'name' | 'size' | 'modified_at'
 export type SortOrder = 'asc' | 'desc'
@@ -23,6 +23,7 @@ interface OllamaState {
   loading: boolean
   error: string | null
   activeDownloads: Map<string, DownloadState>
+  usageStats: Record<string, ModelUsageStats>
 
   setStatus: (status: OllamaStatus) => void
   setModels: (models: OllamaModel[]) => void
@@ -46,6 +47,11 @@ interface OllamaState {
   pullModel: (name: string) => Promise<void>
   importModel: (name: string, filePaths: string[]) => Promise<void>
   cancelPull: (name: string) => Promise<void>
+
+  showModel: (name: string) => Promise<ModelShowResponse>
+  copyModel: (source: string, destination: string) => Promise<void>
+  createFromModel: (request: CreateFromModelRequest) => Promise<void>
+  fetchUsageStats: () => Promise<void>
 }
 
 function getFilteredModels(
@@ -87,6 +93,7 @@ export const useOllamaStore = create<OllamaState>((set, get) => ({
   loading: false,
   error: null,
   activeDownloads: new Map(),
+  usageStats: {},
 
   setStatus: (status) => set({ status }),
   setModels: (models) => set({ models }),
@@ -224,6 +231,40 @@ export const useOllamaStore = create<OllamaState>((set, get) => ({
     try {
       await window.electronAPI.cancelPull(name)
       get().removePullProgress(name)
+    } catch {
+      // ignore
+    }
+  },
+
+  showModel: async (name) => {
+    return window.electronAPI.showModel(name)
+  },
+
+  copyModel: async (source, destination) => {
+    try {
+      set({ error: null })
+      await window.electronAPI.copyModel(source, destination)
+      await get().fetchModels()
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed to copy model' })
+      throw err
+    }
+  },
+
+  createFromModel: async (request) => {
+    try {
+      set({ error: null })
+      await window.electronAPI.createFromModel(request)
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed to create model variant' })
+      throw err
+    }
+  },
+
+  fetchUsageStats: async () => {
+    try {
+      const stats = await window.electronAPI.getUsageStats()
+      set({ usageStats: stats })
     } catch {
       // ignore
     }

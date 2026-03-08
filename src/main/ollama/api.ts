@@ -3,7 +3,7 @@ import { createHash } from 'crypto'
 import { basename } from 'path'
 import http from 'http'
 import https from 'https'
-import type { OllamaModel, PullProgress, RunningModel } from '../../shared/types'
+import type { OllamaModel, PullProgress, RunningModel, ModelShowResponse, CreateFromModelRequest } from '../../shared/types'
 import store from '../store'
 import { createLogger } from '../logger'
 
@@ -354,6 +354,105 @@ export async function createModel(
     onComplete(false, msg)
     throw err
   }
+}
+
+export async function showModel(name: string): Promise<ModelShowResponse> {
+  const res = await fetch(`${getBaseUrl()}/api/show`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: name })
+  })
+  if (!res.ok) throw new Error(`Failed to show model: ${res.statusText}`)
+  return res.json()
+}
+
+export async function copyModel(source: string, destination: string): Promise<void> {
+  const res = await fetch(`${getBaseUrl()}/api/copy`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ source, destination })
+  })
+  if (!res.ok) throw new Error(`Failed to copy model: ${res.statusText}`)
+}
+
+export async function createFromModel(
+  request: CreateFromModelRequest,
+  onProgress: (progress: PullProgress) => void,
+  onComplete: (success: boolean, error?: string) => void
+): Promise<void> {
+  try {
+    const body: Record<string, unknown> = {
+      model: request.model,
+      from: request.from,
+      stream: true
+    }
+    if (request.system) body.system = request.system
+    if (request.template) body.template = request.template
+    if (request.parameters) {
+      for (const [key, value] of Object.entries(request.parameters)) {
+        if (!body.parameters) body.parameters = {}
+        ;(body.parameters as Record<string, unknown>)[key] = value
+      }
+    }
+
+    const res = await fetch(`${getBaseUrl()}/api/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => res.statusText)
+      throw new Error(`Failed to create model: ${text}`)
+    }
+
+    const reader = res.body?.getReader()
+    if (!reader) throw new Error('No response body')
+
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let hasSuccess = false
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() ?? ''
+
+      for (const line of lines) {
+        if (!line.trim()) continue
+        try {
+          const data = JSON.parse(line)
+          onProgress({
+            modelName: request.model,
+            status: data.status ?? '',
+            digest: data.digest,
+            total: data.total,
+            completed: data.completed
+          })
+          if (data.status === 'success') hasSuccess = true
+          if (data.error) throw new Error(data.error)
+        } catch (e) {
+          if (e instanceof SyntaxError) continue
+          throw e
+        }
+      }
+    }
+
+    if (!hasSuccess) throw new Error('Model creation did not report success')
+    onComplete(true)
+  } catch (err) {
+    onComplete(false, err instanceof Error ? err.message : 'Unknown error')
+  }
+}
+
+export async function listRunningModels(): Promise<string[]> {
+  const res = await fetch(`${getBaseUrl()}/api/ps`, { signal: AbortSignal.timeout(3000) })
+  if (!res.ok) return []
+  const data = await res.json()
+  return (data.models ?? []).map((m: { name: string }) => m.name)
 }
 
 export function cancelPull(name: string): boolean {

@@ -157,10 +157,16 @@ All channels are defined in `src/shared/channels.ts`. The preload bridge (`src/p
 | `ollama:list-running` | invoke | List running (loaded) models |
 | `ollama:unload-model` | invoke | Unload model from memory |
 | `ollama:get-log-path` | invoke | Get current log file path |
+| `ollama:show-model` | invoke | Get model details (POST /api/show) |
+| `ollama:copy-model` | invoke | Copy model to new name |
+| `ollama:create-from-model` | invoke | Create variant from existing model |
+| `ollama:get-usage-stats` | invoke | Get model usage statistics |
 | `ollama:open-url` | send | Open URL in default browser |
 | `ollama:status-changed` | event | Broadcast status changes |
 | `ollama:pull-progress` | event | Broadcast pull progress |
 | `ollama:pull-complete` | event | Broadcast pull completion |
+| `ollama:create-progress` | event | Broadcast model creation progress |
+| `ollama:create-complete` | event | Broadcast model creation completion |
 | `app:get-launch-at-login` | invoke | Get launch at login setting |
 | `app:set-launch-at-login` | invoke | Set launch at login |
 | `app:get-theme` | invoke | Get theme mode (system/light/dark) |
