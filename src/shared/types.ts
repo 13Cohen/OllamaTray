@@ -46,6 +46,18 @@ export interface OllamaConfig {
   defaultModelsDir: string
 }
 
+export interface RunningModel {
+  name: string
+  model: string
+  size: number
+  size_vram: number
+  digest: string
+  details: OllamaModelDetails
+  expires_at: string
+}
+
+export type ThemeMode = 'system' | 'light' | 'dark'
+
 export interface GgufFileInfo {
   filePaths: string[]
   fileName: string
@@ -63,6 +75,8 @@ export interface ElectronAPI {
   startService: () => Promise<void>
   stopService: () => Promise<void>
   listModels: () => Promise<OllamaModel[]>
+  listRunning: () => Promise<RunningModel[]>
+  unloadModel: (name: string) => Promise<void>
   deleteModel: (name: string) => Promise<void>
   pullModel: (name: string) => Promise<void>
   cancelPull: (name: string) => Promise<void>
@@ -73,4 +87,11 @@ export interface ElectronAPI {
   getLogPath: () => Promise<string>
   togglePin: () => Promise<boolean>
   getPinned: () => Promise<boolean>
+  getLaunchAtLogin: () => Promise<boolean>
+  setLaunchAtLogin: (enabled: boolean) => Promise<void>
+  getTheme: () => Promise<ThemeMode>
+  setTheme: (theme: ThemeMode) => Promise<void>
+  onThemeChanged: (callback: (shouldUseDark: boolean) => void) => () => void
+  getNotificationsEnabled: () => Promise<boolean>
+  setNotificationsEnabled: (enabled: boolean) => Promise<void>
 }

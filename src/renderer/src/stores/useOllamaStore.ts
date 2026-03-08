@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { OllamaModel, OllamaStatus, PullProgress } from '../../../shared/types'
+import type { OllamaModel, OllamaStatus, PullProgress, RunningModel } from '../../../shared/types'
 
 export type SortBy = 'name' | 'size' | 'modified_at'
 export type SortOrder = 'asc' | 'desc'
@@ -16,6 +16,7 @@ interface DownloadState {
 interface OllamaState {
   status: OllamaStatus
   models: OllamaModel[]
+  runningModels: RunningModel[]
   searchQuery: string
   sortBy: SortBy
   sortOrder: SortOrder
@@ -25,6 +26,7 @@ interface OllamaState {
 
   setStatus: (status: OllamaStatus) => void
   setModels: (models: OllamaModel[]) => void
+  setRunningModels: (models: RunningModel[]) => void
   setSearchQuery: (query: string) => void
   setSortBy: (sortBy: SortBy) => void
   toggleSortOrder: () => void
@@ -36,6 +38,8 @@ interface OllamaState {
 
   fetchStatus: () => Promise<void>
   fetchModels: () => Promise<void>
+  fetchRunningModels: () => Promise<void>
+  unloadModel: (name: string) => Promise<void>
   startService: () => Promise<void>
   stopService: () => Promise<void>
   deleteModel: (name: string) => Promise<void>
@@ -76,6 +80,7 @@ function getFilteredModels(
 export const useOllamaStore = create<OllamaState>((set, get) => ({
   status: { running: false, source: 'unknown' },
   models: [],
+  runningModels: [],
   searchQuery: '',
   sortBy: 'modified_at',
   sortOrder: 'desc',
@@ -85,6 +90,7 @@ export const useOllamaStore = create<OllamaState>((set, get) => ({
 
   setStatus: (status) => set({ status }),
   setModels: (models) => set({ models }),
+  setRunningModels: (runningModels) => set({ runningModels }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   setSortBy: (sortBy) => set({ sortBy }),
   toggleSortOrder: () => set((s) => ({ sortOrder: s.sortOrder === 'asc' ? 'desc' : 'asc' })),
@@ -147,6 +153,24 @@ export const useOllamaStore = create<OllamaState>((set, get) => ({
     }
   },
 
+  fetchRunningModels: async () => {
+    try {
+      const runningModels = await window.electronAPI.listRunning()
+      set({ runningModels })
+    } catch {
+      set({ runningModels: [] })
+    }
+  },
+
+  unloadModel: async (name) => {
+    try {
+      await window.electronAPI.unloadModel(name)
+      await get().fetchRunningModels()
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed to unload model' })
+    }
+  },
+
   startService: async () => {
     set({ loading: true, error: null })
     try {
@@ -163,7 +187,7 @@ export const useOllamaStore = create<OllamaState>((set, get) => ({
     try {
       await window.electronAPI.stopService()
       await get().fetchStatus()
-      set({ loading: false, models: [] })
+      set({ loading: false, models: [], runningModels: [] })
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Failed to stop service', loading: false })
     }
