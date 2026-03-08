@@ -69,8 +69,10 @@ export class MockOllamaServer {
   private _port = 0
   private _models: MockModel[]
   private _healthy = true
+  blobs = new Set<string>()
   pullRequested: { name: string }[] = []
   deleteRequested: string[] = []
+  createRequested: { model: string; files: Record<string, string> }[] = []
 
   constructor(models: MockModel[] = DEFAULT_MODELS) {
     this._models = [...models]
@@ -131,6 +133,87 @@ export class MockOllamaServer {
     if (url === '/api/tags' && method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify({ models: this._models }))
+      return
+    }
+
+    // Version
+    if (url === '/api/version' && method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ version: '0.5.1' }))
+      return
+    }
+
+    // Check blob exists
+    if (url?.startsWith('/api/blobs/sha256:') && method === 'HEAD') {
+      const digest = url.replace('/api/blobs/', '')
+      if (this.blobs.has(digest)) {
+        res.writeHead(200)
+      } else {
+        res.writeHead(404)
+      }
+      res.end()
+      return
+    }
+
+    // Upload blob
+    if (url?.startsWith('/api/blobs/sha256:') && method === 'POST') {
+      const digest = url.replace('/api/blobs/', '')
+      // Consume the body (discard data, just drain it)
+      req.on('data', () => {})
+      req.on('end', () => {
+        this.blobs.add(digest)
+        res.writeHead(201)
+        res.end()
+      })
+      return
+    }
+
+    // Create model (files-based)
+    if (url === '/api/create' && method === 'POST') {
+      this.readBody(req).then((body) => {
+        const parsed = JSON.parse(body)
+        const { model, files } = parsed
+        this.createRequested.push({ model, files: files ?? {} })
+
+        res.writeHead(200, { 'Content-Type': 'application/x-ndjson' })
+
+        const steps = [
+          { status: 'reading model metadata' },
+          { status: 'creating system layer' },
+          { status: 'using existing layer sha256:abc123' },
+          { status: 'writing manifest' },
+          { status: 'success' }
+        ]
+
+        let i = 0
+        const interval = setInterval(() => {
+          if (i >= steps.length) {
+            clearInterval(interval)
+            // Add the model to the list
+            this._models.push({
+              name: model,
+              model: model,
+              size: 1_000_000,
+              digest: 'sha256:created123',
+              modified_at: new Date().toISOString(),
+              details: {
+                parent_model: '',
+                format: 'gguf',
+                family: 'test',
+                families: null,
+                parameter_size: '1B',
+                quantization_level: 'Q4_0'
+              }
+            })
+            res.end()
+            return
+          }
+          res.write(JSON.stringify(steps[i]) + '\n')
+          i++
+        }, 50)
+
+        req.on('close', () => clearInterval(interval))
+      })
       return
     }
 

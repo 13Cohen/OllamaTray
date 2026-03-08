@@ -19,9 +19,9 @@ test.describe('Model Pull', () => {
   test('download button is disabled when input is empty', async ({ page }) => {
     await page.waitForTimeout(1500)
 
-    // The download button near the pull input
+    // The download button near the pull input (first button in the section)
     const pullSection = page.locator('.border-t').last()
-    const downloadBtn = pullSection.getByRole('button')
+    const downloadBtn = pullSection.getByRole('button').first()
     await expect(downloadBtn).toBeDisabled()
   })
 

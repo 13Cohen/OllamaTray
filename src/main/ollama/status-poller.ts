@@ -1,5 +1,5 @@
 import { BrowserWindow } from 'electron'
-import { checkHealth } from './api'
+import { checkHealth, getVersion } from './api'
 import { detectStartupSource } from './service'
 import { IPC } from '../../shared/channels'
 import type { OllamaStatus } from '../../shared/types'
@@ -22,9 +22,10 @@ export function startPolling(getWindow: () => BrowserWindow | null): void {
   const poll = async (): Promise<void> => {
     const running = await checkHealth()
     const source = running ? detectStartupSource() : 'unknown'
-    const newStatus: OllamaStatus = { running, source }
+    const version = running ? await getVersion() : undefined
+    const newStatus: OllamaStatus = { running, source, version }
 
-    if (newStatus.running !== lastStatus.running || newStatus.source !== lastStatus.source) {
+    if (newStatus.running !== lastStatus.running || newStatus.source !== lastStatus.source || newStatus.version !== lastStatus.version) {
       lastStatus = newStatus
       onStatusChange?.(newStatus)
       const win = getWindow()

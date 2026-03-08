@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Power, Loader2, Pin, PinOff } from 'lucide-react'
+import { Power, Loader2, Settings, Pin, PinOff } from 'lucide-react'
 import { Button } from '@renderer/components/ui/button'
 import {
   Dialog,
@@ -10,7 +10,11 @@ import {
 } from '@renderer/components/ui/dialog'
 import { useOllamaStore } from '@renderer/stores/useOllamaStore'
 
-export function ServiceStatus(): React.JSX.Element {
+interface ServiceStatusProps {
+  onOpenSettings: () => void
+}
+
+export function ServiceStatus({ onOpenSettings }: ServiceStatusProps): React.JSX.Element {
   const status = useOllamaStore((s) => s.status)
   const loading = useOllamaStore((s) => s.loading)
   const startService = useOllamaStore((s) => s.startService)
@@ -69,11 +73,17 @@ export function ServiceStatus(): React.JSX.Element {
               Ollama {status.running ? 'Running' : 'Stopped'}
             </div>
             {status.running && (
-              <div className="text-[11px] text-muted-foreground">{sourceLabel()}</div>
+              <div className="text-[11px] text-muted-foreground">
+                {sourceLabel()}
+                {status.version && ` · v${status.version}`}
+              </div>
             )}
           </div>
         </div>
         <div className="flex items-center gap-1.5">
+          <Button variant="ghost" size="sm" onClick={onOpenSettings} className="h-7 w-7 p-0">
+            <Settings className="h-3.5 w-3.5" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"

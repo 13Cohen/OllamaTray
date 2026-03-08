@@ -2,9 +2,12 @@ import { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, screen } from 'el
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc/handlers'
-import { startPolling, stopPolling, setOnStatusChange, getLastStatus } from './ollama/status-poller'
+import { startPolling, stopPolling, setOnStatusChange } from './ollama/status-poller'
 import { cleanupManagedProcess, startOllama, stopOllama } from './ollama/service'
+import { createLogger, getLogPath } from './logger'
 import { IPC } from '../shared/channels'
+
+const log = createLogger('main')
 
 const isMac = process.platform === 'darwin'
 const isWin = process.platform === 'win32'
@@ -155,6 +158,9 @@ function updateTrayIcon(running: boolean): void {
 }
 
 app.whenReady().then(() => {
+  log.info(`OllamaTray starting (${process.platform}, Electron ${process.versions.electron})`)
+  log.info(`Log file: ${getLogPath()}`)
+
   if (isMac) {
     app.dock?.hide()
   }

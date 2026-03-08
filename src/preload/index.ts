@@ -3,6 +3,11 @@ import { IPC } from '../shared/channels'
 import type { ElectronAPI } from '../shared/types'
 
 const api: ElectronAPI = {
+  getConfig: () => ipcRenderer.invoke(IPC.GET_CONFIG),
+  setConfig: (config) => ipcRenderer.invoke(IPC.SET_CONFIG, config),
+  selectDirectory: () => ipcRenderer.invoke(IPC.SELECT_DIRECTORY),
+  scanGgufModels: () => ipcRenderer.invoke(IPC.SCAN_GGUF_MODELS),
+  importModel: (name: string, filePaths: string[]) => ipcRenderer.invoke(IPC.IMPORT_MODEL, name, filePaths),
   getStatus: () => ipcRenderer.invoke(IPC.GET_STATUS),
   startService: () => ipcRenderer.invoke(IPC.START_SERVICE),
   stopService: () => ipcRenderer.invoke(IPC.STOP_SERVICE),
@@ -32,6 +37,8 @@ const api: ElectronAPI = {
     ipcRenderer.on(IPC.PULL_COMPLETE, handler)
     return () => ipcRenderer.removeListener(IPC.PULL_COMPLETE, handler)
   },
+  openUrl: (url: string) => ipcRenderer.send(IPC.OPEN_URL, url),
+  getLogPath: () => ipcRenderer.invoke(IPC.GET_LOG_PATH),
   togglePin: () => ipcRenderer.invoke(IPC.TOGGLE_PIN),
   getPinned: () => ipcRenderer.invoke(IPC.GET_PINNED)
 }

@@ -3,7 +3,10 @@ export type OllamaStartSource = 'managed' | 'brew' | 'external' | 'unknown'
 export interface OllamaStatus {
   running: boolean
   source: OllamaStartSource
+  version?: string
 }
+
+export const MIN_OLLAMA_VERSION = '0.5.0'
 
 export interface OllamaModelDetails {
   parent_model: string
@@ -37,7 +40,25 @@ export interface PullComplete {
   error?: string
 }
 
+export interface OllamaConfig {
+  ollamaHost: string
+  ollamaModelsDir: string
+  defaultModelsDir: string
+}
+
+export interface GgufFileInfo {
+  filePaths: string[]
+  fileName: string
+  suggestedName: string
+  sizeBytes: number
+}
+
 export interface ElectronAPI {
+  getConfig: () => Promise<OllamaConfig>
+  setConfig: (config: Partial<OllamaConfig>) => Promise<void>
+  selectDirectory: () => Promise<string | null>
+  scanGgufModels: () => Promise<GgufFileInfo[] | null>
+  importModel: (name: string, filePaths: string[]) => Promise<void>
   getStatus: () => Promise<OllamaStatus>
   startService: () => Promise<void>
   stopService: () => Promise<void>
@@ -48,6 +69,8 @@ export interface ElectronAPI {
   onStatusChanged: (callback: (status: OllamaStatus) => void) => () => void
   onPullProgress: (callback: (progress: PullProgress) => void) => () => void
   onPullComplete: (callback: (result: PullComplete) => void) => () => void
+  openUrl: (url: string) => void
+  getLogPath: () => Promise<string>
   togglePin: () => Promise<boolean>
   getPinned: () => Promise<boolean>
 }
