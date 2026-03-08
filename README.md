@@ -7,6 +7,8 @@ System tray app for managing [Ollama](https://ollama.com) service and local LLMs
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
+[中文文档](./README.zh-CN.md)
+
 ## Features
 
 - **Service Control** — Start/stop Ollama from the tray with one click. Detects whether Ollama was started by this app, Homebrew, or externally, and warns before stopping external instances.
