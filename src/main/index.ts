@@ -1,9 +1,9 @@
-import { app, BrowserWindow, Tray, nativeImage, screen } from 'electron'
+import { app, BrowserWindow, Menu, Tray, nativeImage, screen } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc/handlers'
-import { startPolling, stopPolling, setOnStatusChange } from './ollama/status-poller'
-import { cleanupManagedProcess } from './ollama/service'
+import { startPolling, stopPolling, setOnStatusChange, getLastStatus } from './ollama/status-poller'
+import { cleanupManagedProcess, startOllama, stopOllama } from './ollama/service'
 
 const isMac = process.platform === 'darwin'
 const isWin = process.platform === 'win32'
@@ -114,10 +114,39 @@ function showWindow(): void {
   }
 }
 
+function buildTrayMenu(running: boolean): Menu {
+  return Menu.buildFromTemplate([
+    {
+      label: '打开面板',
+      click: showWindow
+    },
+    { type: 'separator' },
+    {
+      label: running ? '停止服务' : '启动服务',
+      click: (): void => {
+        if (running) {
+          stopOllama()
+        } else {
+          startOllama()
+        }
+      }
+    },
+    { type: 'separator' },
+    {
+      label: '退出',
+      click: (): void => {
+        stopOllama()
+        app.quit()
+      }
+    }
+  ])
+}
+
 function updateTrayIcon(running: boolean): void {
   if (tray) {
     tray.setImage(createTrayIcon(running))
     tray.setToolTip(running ? 'Ollama: Running' : 'Ollama: Stopped')
+    tray.setContextMenu(buildTrayMenu(running))
   }
 }
 
@@ -128,7 +157,10 @@ app.whenReady().then(() => {
 
   tray = new Tray(createTrayIcon(false))
   tray.setToolTip('OllamaTray')
-  tray.on('click', showWindow)
+  tray.setContextMenu(buildTrayMenu(false))
+  tray.on('click', () => {
+    tray?.popUpContextMenu()
+  })
 
   window = createWindow()
 
