@@ -1,11 +1,13 @@
-import { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, screen } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, nativeTheme, screen } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc/handlers'
 import { startPolling, stopPolling, setOnStatusChange } from './ollama/status-poller'
 import { cleanupManagedProcess, startOllama, stopOllama } from './ollama/service'
 import { createLogger, getLogPath } from './logger'
+import { notifyServiceStopped } from './notifications'
 import { IPC } from '../shared/channels'
+import store from './store'
 
 const log = createLogger('main')
 
@@ -165,6 +167,17 @@ app.whenReady().then(() => {
     app.dock?.hide()
   }
 
+  // Apply saved theme setting
+  const savedTheme = store.get('theme')
+  nativeTheme.themeSource = savedTheme
+
+  // Sync login item setting on startup
+  const launchAtLogin = store.get('launchAtLogin')
+  app.setLoginItemSettings({
+    openAtLogin: launchAtLogin,
+    ...(isMac ? { openAsHidden: true } : {})
+  })
+
   tray = new Tray(createTrayIcon(false))
   tray.setToolTip('OllamaTray')
   tray.setContextMenu(buildTrayMenu(false))
@@ -174,7 +187,8 @@ app.whenReady().then(() => {
 
   window = createWindow()
 
-  registerIpcHandlers(getWindow)
+  let intentionalStop = false
+  registerIpcHandlers(getWindow, () => { intentionalStop = true })
 
   ipcMain.handle(IPC.TOGGLE_PIN, () => {
     pinned = !pinned
@@ -188,7 +202,23 @@ app.whenReady().then(() => {
     return pinned
   })
 
+  // Forward native theme changes to renderer
+  nativeTheme.on('updated', () => {
+    const win = getWindow()
+    if (win && !win.isDestroyed()) {
+      win.webContents.send(IPC.THEME_CHANGED, nativeTheme.shouldUseDarkColors)
+    }
+  })
+
+  let previousRunning = false
   setOnStatusChange((status) => {
+    // Notify if service stopped unexpectedly (not via user action)
+    if (previousRunning && !status.running && !intentionalStop) {
+      notifyServiceStopped(getWindow)
+    }
+    intentionalStop = false
+    previousRunning = status.running
+
     updateTrayIcon(status.running)
   })
 

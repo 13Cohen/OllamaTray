@@ -3,7 +3,7 @@ import { createHash } from 'crypto'
 import { basename } from 'path'
 import http from 'http'
 import https from 'https'
-import type { OllamaModel, PullProgress } from '../../shared/types'
+import type { OllamaModel, PullProgress, RunningModel } from '../../shared/types'
 import store from '../store'
 import { createLogger } from '../logger'
 
@@ -39,6 +39,24 @@ export async function listModels(): Promise<OllamaModel[]> {
   if (!res.ok) throw new Error(`Failed to list models: ${res.statusText}`)
   const data = await res.json()
   return data.models ?? []
+}
+
+export async function listRunning(): Promise<RunningModel[]> {
+  const res = await fetch(`${getBaseUrl()}/api/ps`)
+  if (!res.ok) throw new Error(`Failed to list running models: ${res.statusText}`)
+  const data = await res.json()
+  return data.models ?? []
+}
+
+export async function unloadModel(name: string): Promise<void> {
+  const res = await fetch(`${getBaseUrl()}/api/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: name, keep_alive: 0 })
+  })
+  if (!res.ok) throw new Error(`Failed to unload model: ${res.statusText}`)
+  // Consume the response body
+  await res.text()
 }
 
 export async function deleteModel(name: string): Promise<void> {

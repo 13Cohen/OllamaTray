@@ -1,12 +1,27 @@
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Copy, Check, FolderOpen, RotateCcw, FileText } from 'lucide-react'
+import { ArrowLeft, Copy, Check, FolderOpen, RotateCcw, FileText, Sun, Moon, Monitor } from 'lucide-react'
 import { Button } from '@renderer/components/ui/button'
 import { Input } from '@renderer/components/ui/input'
 import { useOllamaStore } from '@renderer/stores/useOllamaStore'
-import type { OllamaConfig } from '../../../shared/types'
+import type { OllamaConfig, ThemeMode } from '../../../shared/types'
 
 interface SettingsProps {
   onBack: () => void
+}
+
+function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }): React.JSX.Element {
+  return (
+    <button
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors ${checked ? 'bg-primary' : 'bg-input'}`}
+    >
+      <span
+        className={`pointer-events-none block h-4 w-4 rounded-full bg-background shadow-sm ring-0 transition-transform mt-0.5 ${checked ? 'translate-x-4.5 ml-px' : 'translate-x-0.5'}`}
+      />
+    </button>
+  )
 }
 
 export function Settings({ onBack }: SettingsProps): React.JSX.Element {
@@ -15,6 +30,9 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
   const [dirty, setDirty] = useState(false)
   const [needsRestart, setNeedsRestart] = useState(false)
   const [logPath, setLogPath] = useState('')
+  const [launchAtLogin, setLaunchAtLogin] = useState(false)
+  const [theme, setTheme] = useState<ThemeMode>('system')
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const status = useOllamaStore((s) => s.status)
   const stopService = useOllamaStore((s) => s.stopService)
   const startService = useOllamaStore((s) => s.startService)
@@ -23,6 +41,9 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
   useEffect(() => {
     window.electronAPI.getConfig().then(setConfig)
     window.electronAPI.getLogPath().then(setLogPath)
+    window.electronAPI.getLaunchAtLogin().then(setLaunchAtLogin)
+    window.electronAPI.getTheme().then(setTheme)
+    window.electronAPI.getNotificationsEnabled().then(setNotificationsEnabled)
   }, [])
 
   const apiUrl = config.ollamaHost.startsWith('http')
@@ -64,6 +85,21 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
     await startService()
     setRestarting(false)
     setNeedsRestart(false)
+  }
+
+  const handleLaunchAtLoginChange = async (enabled: boolean): Promise<void> => {
+    setLaunchAtLogin(enabled)
+    await window.electronAPI.setLaunchAtLogin(enabled)
+  }
+
+  const handleThemeChange = async (newTheme: ThemeMode): Promise<void> => {
+    setTheme(newTheme)
+    await window.electronAPI.setTheme(newTheme)
+  }
+
+  const handleNotificationsChange = async (enabled: boolean): Promise<void> => {
+    setNotificationsEnabled(enabled)
+    await window.electronAPI.setNotificationsEnabled(enabled)
   }
 
   return (
@@ -138,6 +174,47 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
           <p className="text-[11px] text-muted-foreground">
             Ollama will read and store models from this directory. Leave empty for default.
           </p>
+        </div>
+
+        {/* Theme */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">Theme</label>
+          <div className="flex items-center gap-1">
+            {([
+              { value: 'system' as const, icon: Monitor, label: 'System' },
+              { value: 'light' as const, icon: Sun, label: 'Light' },
+              { value: 'dark' as const, icon: Moon, label: 'Dark' }
+            ]).map(({ value, icon: Icon, label }) => (
+              <Button
+                key={value}
+                variant={theme === value ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleThemeChange(value)}
+                className="flex-1 gap-1.5 h-8 text-xs"
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Launch at Login */}
+        <div className="flex items-center justify-between">
+          <div>
+            <label className="text-xs font-medium">Launch at Login</label>
+            <p className="text-[11px] text-muted-foreground">Start OllamaTray when you log in</p>
+          </div>
+          <ToggleSwitch checked={launchAtLogin} onChange={handleLaunchAtLoginChange} />
+        </div>
+
+        {/* Notifications */}
+        <div className="flex items-center justify-between">
+          <div>
+            <label className="text-xs font-medium">Notifications</label>
+            <p className="text-[11px] text-muted-foreground">Download complete, service alerts</p>
+          </div>
+          <ToggleSwitch checked={notificationsEnabled} onChange={handleNotificationsChange} />
         </div>
 
         {/* Logs */}

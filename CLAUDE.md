@@ -28,6 +28,10 @@ All API calls go through `src/main/ollama/api.ts`. The base URL is resolved from
 | `/api/delete` | DELETE | Delete a model |
 | `/api/blobs/sha256:<digest>` | HEAD | Check if blob exists |
 | `/api/blobs/sha256:<digest>` | POST | Upload file as blob (streaming body) |
+| `/api/ps` | GET | List running (loaded) models |
+| `/api/generate` | POST | Generate (used with keep_alive:0 to unload) |
+| `/api/show` | POST | Get model details (parameters, template, system, license) |
+| `/api/copy` | POST | Copy model to new name |
 | `/api/create` | POST | Create model from blobs (streaming response) |
 
 ### GGUF Model Import Flow (Critical)
@@ -115,16 +119,18 @@ log.error('Failed to connect', { url })
 src/shared/         Types, IPC channels, constants (shared between main & renderer)
 src/main/
   logger.ts         Tagged file-based logging (createLogger, getLogPath)
+  notifications.ts  System notifications (download/import complete, service stopped)
   ollama/api.ts     REST client (all Ollama HTTP calls, blob upload)
   ollama/service.ts Cross-platform process management (spawn/kill ollama)
   ollama/status-poller.ts  Periodic health + version polling
   ipc/handlers.ts   All IPC handlers (bridges renderer ↔ main)
-  store.ts          electron-store for persistent config
+  store.ts          electron-store for persistent config (host, theme, launchAtLogin, notifications)
 src/preload/        contextBridge typed API
 src/renderer/
   stores/           Zustand store
   components/       React UI components
-    Settings.tsx    Host/port config, models dir, log viewer
+    Settings.tsx    Host/port, models dir, theme, launch at login, notifications
+    RunningModels.tsx  Running models list with unload button
     VersionWarning.tsx  Ollama version check banner
     PullModelInput.tsx  Model pull + GGUF scan/import UI
 e2e/                Playwright tests + mock Ollama HTTP server
@@ -148,11 +154,20 @@ All channels are defined in `src/shared/channels.ts`. The preload bridge (`src/p
 | `ollama:select-directory` | invoke | Open native directory picker |
 | `ollama:scan-gguf-models` | invoke | Scan for local GGUF files |
 | `ollama:import-model` | invoke | Import GGUF model (blob upload + create) |
+| `ollama:list-running` | invoke | List running (loaded) models |
+| `ollama:unload-model` | invoke | Unload model from memory |
 | `ollama:get-log-path` | invoke | Get current log file path |
 | `ollama:open-url` | send | Open URL in default browser |
 | `ollama:status-changed` | event | Broadcast status changes |
 | `ollama:pull-progress` | event | Broadcast pull progress |
 | `ollama:pull-complete` | event | Broadcast pull completion |
+| `app:get-launch-at-login` | invoke | Get launch at login setting |
+| `app:set-launch-at-login` | invoke | Set launch at login |
+| `app:get-theme` | invoke | Get theme mode (system/light/dark) |
+| `app:set-theme` | invoke | Set theme mode |
+| `app:theme-changed` | event | Broadcast theme changes |
+| `app:get-notifications-enabled` | invoke | Get notifications setting |
+| `app:set-notifications-enabled` | invoke | Set notifications setting |
 
 ## Configurable Ollama Host
 
