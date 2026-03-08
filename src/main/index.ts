@@ -15,14 +15,17 @@ function getWindow(): BrowserWindow | null {
   return window
 }
 
-function createTrayIcon(color: 'gray' | 'green'): Electron.NativeImage {
-  const size = isWin ? 16 : 22
-  const canvas = `
-    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 2}" fill="${color === 'green' ? '#34D399' : '#9CA3AF'}" />
-    </svg>
-  `
-  return nativeImage.createFromBuffer(Buffer.from(canvas)).resize({ width: size, height: size })
+function trayIconPath(name: string): string {
+  return join(__dirname, '../../resources', name)
+}
+
+function createTrayIcon(running: boolean): Electron.NativeImage {
+  if (isWin) {
+    const file = running ? 'tray-win-running.png' : 'tray-win-stopped.png'
+    return nativeImage.createFromPath(trayIconPath(file))
+  }
+  const file = running ? 'tray-running.png' : 'tray-stopped.png'
+  return nativeImage.createFromPath(trayIconPath(file))
 }
 
 function createWindow(): BrowserWindow {
@@ -113,7 +116,7 @@ function showWindow(): void {
 
 function updateTrayIcon(running: boolean): void {
   if (tray) {
-    tray.setImage(createTrayIcon(running ? 'green' : 'gray'))
+    tray.setImage(createTrayIcon(running))
     tray.setToolTip(running ? 'Ollama: Running' : 'Ollama: Stopped')
   }
 }
@@ -123,7 +126,7 @@ app.whenReady().then(() => {
     app.dock?.hide()
   }
 
-  tray = new Tray(createTrayIcon('gray'))
+  tray = new Tray(createTrayIcon(false))
   tray.setToolTip('OllamaTray')
   tray.on('click', showWindow)
 
