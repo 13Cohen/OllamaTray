@@ -17,12 +17,35 @@ function getWindow(): BrowserWindow | null {
 
 function createTrayIcon(color: 'gray' | 'green'): Electron.NativeImage {
   const size = isWin ? 16 : 22
-  const canvas = `
-    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 2}" fill="${color === 'green' ? '#34D399' : '#9CA3AF'}" />
-    </svg>
-  `
-  return nativeImage.createFromBuffer(Buffer.from(canvas)).resize({ width: size, height: size })
+  const scaleFactor = 2
+  const px = size * scaleFactor
+  const r = (color === 'green') ? 0x34 : 0x9C
+  const g = (color === 'green') ? 0xD3 : 0xA3
+  const b = (color === 'green') ? 0x99 : 0xAF
+
+  const buf = Buffer.alloc(px * px * 4)
+  const cx = px / 2
+  const cy = px / 2
+  const radius = px / 2 - 2 * scaleFactor
+
+  for (let y = 0; y < px; y++) {
+    for (let x = 0; x < px; x++) {
+      const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2)
+      const i = (y * px + x) * 4
+      if (dist <= radius) {
+        buf[i] = r
+        buf[i + 1] = g
+        buf[i + 2] = b
+        buf[i + 3] = 255
+      }
+    }
+  }
+
+  return nativeImage.createFromBuffer(buf, {
+    width: px,
+    height: px,
+    scaleFactor
+  })
 }
 
 function createWindow(): BrowserWindow {
