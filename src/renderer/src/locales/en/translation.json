@@ -1,0 +1,137 @@
+{
+  "service": {
+    "running": "Running",
+    "stopped": "Stopped",
+    "start": "Start",
+    "stop": "Stop",
+    "startedByManager": "Started by Ollama Manager",
+    "startedByBrew": "Started by Homebrew",
+    "startedExternally": "Started externally",
+    "stopConfirmTitle": "Stop Ollama?",
+    "stopConfirmDesc": "Ollama was not started by this app ({{source}}). Stopping it may affect other applications using Ollama.",
+    "stopAnyway": "Stop Anyway",
+    "pinPanel": "Pin panel",
+    "unpinPanel": "Unpin panel"
+  },
+  "models": {
+    "searchPlaceholder": "Search models...",
+    "sortName": "Name",
+    "sortSize": "Size",
+    "sortRecent": "Recent",
+    "noMatching": "No matching models",
+    "noInstalled": "No models installed",
+    "startToView": "Start Ollama to view models",
+    "used": "used {{count}}x",
+    "deleteTitle": "Delete Model",
+    "deleteConfirm": "Are you sure you want to delete <strong>{{name}}</strong> ({{size}})? This action cannot be undone.",
+    "delete": "Delete",
+    "cancel": "Cancel"
+  },
+  "detail": {
+    "format": "Format",
+    "family": "Family",
+    "parameters": "Parameters",
+    "parent": "Parent",
+    "systemPrompt": "System Prompt",
+    "template": "Template",
+    "license": "License",
+    "usage": "Usage",
+    "timesUsed": "Times used",
+    "lastUsed": "Last used",
+    "firstUsed": "First used",
+    "copy": "Copy",
+    "customize": "Customize",
+    "chat": "Chat"
+  },
+  "copyDialog": {
+    "title": "Copy Model",
+    "description": "Create a copy of <strong>{{name}}</strong> with a new name.",
+    "placeholder": "New model name",
+    "copying": "Copying...",
+    "copy": "Copy"
+  },
+  "customizeDialog": {
+    "title": "Create Variant",
+    "description": "Create a customized variant based on <strong>{{name}}</strong>.",
+    "nameLabel": "Name *",
+    "namePlaceholder": "my-custom-model",
+    "systemPromptLabel": "System Prompt",
+    "systemPromptPlaceholder": "You are a helpful assistant...",
+    "temperatureLabel": "Temperature",
+    "contextLengthLabel": "Context Length",
+    "creating": "Creating...",
+    "create": "Create"
+  },
+  "pull": {
+    "placeholder": "Pull model (e.g. llama3.2:3b)",
+    "importTooltip": "Import GGUF models from folder",
+    "importing": "Importing {{current}}/{{total}}...",
+    "doneWithErrors": "Done: {{success}} imported, {{failed}} failed",
+    "doneSuccess": "Successfully imported {{count}} model",
+    "doneSuccess_other": "Successfully imported {{count}} models",
+    "noGguf": "No GGUF models found",
+    "foundGguf": "Found {{count}} GGUF model",
+    "foundGguf_other": "Found {{count}} GGUF models",
+    "import": "Import"
+  },
+  "running": {
+    "title": "Running",
+    "unload": "Unload model"
+  },
+  "settings": {
+    "title": "Settings",
+    "hostLabel": "Host & Port",
+    "copyApiUrl": "Click copy for",
+    "modelsDir": "Models Directory",
+    "modelsDirHint": "Ollama will read and store models from this directory. Leave empty for default.",
+    "theme": "Theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "launchAtLogin": "Launch at Login",
+    "launchAtLoginHint": "Start OllamaTray when you log in",
+    "notifications": "Notifications",
+    "notificationsHint": "Download complete, service alerts",
+    "language": "Language",
+    "languageHint": "Interface language",
+    "logs": "Logs",
+    "restartHint": "Restart to apply changes",
+    "restartNow": "Restart Now",
+    "restarting": "Restarting...",
+    "saveRestart": "Save & Restart Service",
+    "save": "Save"
+  },
+  "version": {
+    "outdated": "Ollama {{version}} is outdated. Version {{min}}+ is required for full functionality.",
+    "update": "Update"
+  },
+  "chat": {
+    "title": "Chat",
+    "selectModel": "Select a model...",
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "stop": "Stop",
+    "clear": "Clear chat",
+    "back": "Back",
+    "thinking": "Thinking...",
+    "loading": "Loading model...",
+    "systemPromptPlaceholder": "System prompt (optional)",
+    "enableThinking": "Thinking",
+    "error": "Error: {{message}}",
+    "imageUpload": "Attach image",
+    "toolCallResponse": "[Tool call: {{name}}]"
+  },
+  "resources": {
+    "title": "Resources",
+    "totalVram": "Total VRAM",
+    "totalRam": "Total RAM",
+    "vram": "VRAM",
+    "ram": "RAM"
+  },
+  "tray": {
+    "openPanel": "Open Panel",
+    "startService": "Start Service",
+    "stopService": "Stop Service",
+    "quit": "Quit"
+  }
+}

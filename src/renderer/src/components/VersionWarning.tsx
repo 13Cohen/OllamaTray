@@ -1,6 +1,7 @@
 import { AlertTriangle, ExternalLink } from 'lucide-react'
 import { useOllamaStore } from '@renderer/stores/useOllamaStore'
 import { MIN_OLLAMA_VERSION } from '../../../shared/types'
+import { useTranslation } from 'react-i18next'
 
 function isVersionAtLeast(version: string, minimum: string): boolean {
   const v = version.split('.').map(Number)
@@ -15,6 +16,7 @@ function isVersionAtLeast(version: string, minimum: string): boolean {
 }
 
 export function VersionWarning(): React.JSX.Element | null {
+  const { t } = useTranslation()
   const status = useOllamaStore((s) => s.status)
 
   if (!status.running || !status.version) return null
@@ -24,14 +26,13 @@ export function VersionWarning(): React.JSX.Element | null {
     <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 border-b border-amber-500/20 text-xs">
       <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
       <span className="flex-1">
-        Ollama {status.version} is outdated. Version {MIN_OLLAMA_VERSION}+ is required for full
-        functionality.
+        {t('version.outdated', { version: status.version, min: MIN_OLLAMA_VERSION })}
       </span>
       <button
         className="text-amber-500 hover:text-amber-400 underline underline-offset-2 shrink-0 flex items-center gap-1"
         onClick={() => window.electronAPI.openUrl('https://ollama.com/download')}
       >
-        Update
+        {t('version.update')}
         <ExternalLink className="h-3 w-3" />
       </button>
     </div>

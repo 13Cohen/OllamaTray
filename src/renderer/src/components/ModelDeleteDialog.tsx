@@ -7,6 +7,7 @@ import {
 } from '@renderer/components/ui/dialog'
 import { Button } from '@renderer/components/ui/button'
 import { formatBytes } from '@renderer/lib/utils'
+import { Trans, useTranslation } from 'react-i18next'
 import type { OllamaModel } from '../../../shared/types'
 
 interface ModelDeleteDialogProps {
@@ -22,21 +23,25 @@ export function ModelDeleteDialog({
   onOpenChange,
   onConfirm
 }: ModelDeleteDialogProps): React.JSX.Element {
+  const { t } = useTranslation()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogHeader>
-        <DialogTitle>Delete Model</DialogTitle>
+        <DialogTitle>{t('models.deleteTitle')}</DialogTitle>
         <DialogDescription>
-          Are you sure you want to delete <strong>{model?.name}</strong>
-          {model ? ` (${formatBytes(model.size)})` : ''}? This action cannot be undone.
+          <Trans
+            i18nKey="models.deleteConfirm"
+            values={{ name: model?.name ?? '', size: model ? formatBytes(model.size) : '' }}
+            components={{ strong: <strong /> }}
+          />
         </DialogDescription>
       </DialogHeader>
       <DialogFooter>
         <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
-          Cancel
+          {t('models.cancel')}
         </Button>
         <Button variant="destructive" size="sm" onClick={onConfirm}>
-          Delete
+          {t('models.delete')}
         </Button>
       </DialogFooter>
     </Dialog>

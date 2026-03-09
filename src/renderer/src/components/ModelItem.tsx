@@ -2,6 +2,7 @@ import { Trash2 } from 'lucide-react'
 import { Button } from '@renderer/components/ui/button'
 import { Badge } from '@renderer/components/ui/badge'
 import { formatBytes, formatRelativeTime } from '@renderer/lib/utils'
+import { useTranslation } from 'react-i18next'
 import type { OllamaModel, ModelUsageStats } from '../../../shared/types'
 
 interface ModelItemProps {
@@ -12,6 +13,7 @@ interface ModelItemProps {
 }
 
 export function ModelItem({ model, stats, onDelete, onSelect }: ModelItemProps): React.JSX.Element {
+  const { t } = useTranslation()
   return (
     <div
       className="group flex items-center justify-between px-4 py-2.5 hover:bg-accent/50 transition-colors cursor-pointer"
@@ -39,7 +41,7 @@ export function ModelItem({ model, stats, onDelete, onSelect }: ModelItemProps):
           {stats && (
             <>
               <span>·</span>
-              <span>used {stats.useCount}x</span>
+              <span>{t('models.used', { count: stats.useCount })}</span>
             </>
           )}
         </div>

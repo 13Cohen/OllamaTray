@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Loader2, Copy, Wand2 } from 'lucide-react'
+import { Loader2, Copy, Wand2, MessageCircle } from 'lucide-react'
 import {
   Dialog,
   DialogHeader,
@@ -11,6 +11,7 @@ import { Button } from '@renderer/components/ui/button'
 import { ScrollArea } from '@renderer/components/ui/scroll-area'
 import { formatBytes, formatRelativeTime } from '@renderer/lib/utils'
 import { useOllamaStore } from '@renderer/stores/useOllamaStore'
+import { useTranslation } from 'react-i18next'
 import type { OllamaModel, ModelShowResponse } from '../../../shared/types'
 
 interface ModelDetailDialogProps {
@@ -19,6 +20,7 @@ interface ModelDetailDialogProps {
   onOpenChange: (open: boolean) => void
   onCopy: (model: OllamaModel) => void
   onCustomize: (model: OllamaModel) => void
+  onChat: (model: OllamaModel) => void
 }
 
 export function ModelDetailDialog({
@@ -26,8 +28,10 @@ export function ModelDetailDialog({
   open,
   onOpenChange,
   onCopy,
-  onCustomize
+  onCustomize,
+  onChat
 }: ModelDetailDialogProps): React.JSX.Element {
+  const { t } = useTranslation()
   const showModel = useOllamaStore((s) => s.showModel)
   const usageStats = useOllamaStore((s) => s.usageStats)
   const [detail, setDetail] = useState<ModelShowResponse | null>(null)
@@ -83,19 +87,19 @@ export function ModelDetailDialog({
           <div className="space-y-3 text-sm">
             {/* Basic Info */}
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-              <span className="text-muted-foreground">Format</span>
+              <span className="text-muted-foreground">{t('detail.format')}</span>
               <span>{detail.details.format}</span>
-              <span className="text-muted-foreground">Family</span>
+              <span className="text-muted-foreground">{t('detail.family')}</span>
               <span>{detail.details.family}</span>
               {detail.details.parameter_size && (
                 <>
-                  <span className="text-muted-foreground">Parameters</span>
+                  <span className="text-muted-foreground">{t('detail.parameters')}</span>
                   <span>{detail.details.parameter_size}</span>
                 </>
               )}
               {detail.details.parent_model && (
                 <>
-                  <span className="text-muted-foreground">Parent</span>
+                  <span className="text-muted-foreground">{t('detail.parent')}</span>
                   <span className="truncate">{detail.details.parent_model}</span>
                 </>
               )}
@@ -104,7 +108,7 @@ export function ModelDetailDialog({
             {/* System Prompt */}
             {detail.system && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">System Prompt</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1">{t('detail.systemPrompt')}</p>
                 <pre className="text-xs bg-muted/50 rounded p-2 whitespace-pre-wrap break-words max-h-[80px] overflow-auto">
                   {detail.system}
                 </pre>
@@ -114,7 +118,7 @@ export function ModelDetailDialog({
             {/* Template */}
             {detail.template && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">Template</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1">{t('detail.template')}</p>
                 <pre className="text-xs bg-muted/50 rounded p-2 whitespace-pre-wrap break-words max-h-[80px] overflow-auto">
                   {detail.template}
                 </pre>
@@ -124,7 +128,7 @@ export function ModelDetailDialog({
             {/* Parameters */}
             {detail.parameters && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">Parameters</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1">{t('detail.parameters')}</p>
                 <pre className="text-xs bg-muted/50 rounded p-2 whitespace-pre-wrap break-words max-h-[60px] overflow-auto">
                   {detail.parameters}
                 </pre>
@@ -134,7 +138,7 @@ export function ModelDetailDialog({
             {/* License */}
             {detail.license && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">License</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1">{t('detail.license')}</p>
                 <pre className="text-xs bg-muted/50 rounded p-2 whitespace-pre-wrap break-words max-h-[60px] overflow-auto">
                   {detail.license}
                 </pre>
@@ -144,13 +148,13 @@ export function ModelDetailDialog({
             {/* Usage Stats */}
             {stats && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">Usage</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1">{t('detail.usage')}</p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                  <span className="text-muted-foreground">Times used</span>
+                  <span className="text-muted-foreground">{t('detail.timesUsed')}</span>
                   <span>{stats.useCount}</span>
-                  <span className="text-muted-foreground">Last used</span>
+                  <span className="text-muted-foreground">{t('detail.lastUsed')}</span>
                   <span>{formatRelativeTime(stats.lastUsedAt)}</span>
-                  <span className="text-muted-foreground">First used</span>
+                  <span className="text-muted-foreground">{t('detail.firstUsed')}</span>
                   <span>{formatRelativeTime(stats.firstUsedAt)}</span>
                 </div>
               </div>
@@ -161,13 +165,17 @@ export function ModelDetailDialog({
 
       {model && (
         <div className="flex justify-end gap-2 mt-4">
+          <Button variant="outline" size="sm" className="gap-1" onClick={() => onChat(model)}>
+            <MessageCircle className="h-3 w-3" />
+            {t('detail.chat')}
+          </Button>
           <Button variant="outline" size="sm" className="gap-1" onClick={() => onCopy(model)}>
             <Copy className="h-3 w-3" />
-            Copy
+            {t('detail.copy')}
           </Button>
           <Button variant="outline" size="sm" className="gap-1" onClick={() => onCustomize(model)}>
             <Wand2 className="h-3 w-3" />
-            Customize
+            {t('detail.customize')}
           </Button>
         </div>
       )}

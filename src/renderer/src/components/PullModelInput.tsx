@@ -4,6 +4,7 @@ import { Input } from '@renderer/components/ui/input'
 import { Button } from '@renderer/components/ui/button'
 import { ScrollArea } from '@renderer/components/ui/scroll-area'
 import { useOllamaStore } from '@renderer/stores/useOllamaStore'
+import { useTranslation } from 'react-i18next'
 import type { GgufFileInfo } from '../../../shared/types'
 
 function formatSize(bytes: number): string {
@@ -12,6 +13,7 @@ function formatSize(bytes: number): string {
 }
 
 export function PullModelInput(): React.JSX.Element | null {
+  const { t } = useTranslation()
   const status = useOllamaStore((s) => s.status)
   const pullModel = useOllamaStore((s) => s.pullModel)
   const [modelName, setModelName] = useState('')
@@ -98,20 +100,20 @@ export function PullModelInput(): React.JSX.Element | null {
   }
 
   if (scannedFiles !== null) {
+    const statusText = importing
+      ? t('pull.importing', { current: importProgress.current, total: importProgress.total })
+      : importResult
+        ? importResult.failed > 0
+          ? t('pull.doneWithErrors', { success: importResult.success, failed: importResult.failed })
+          : t('pull.doneSuccess', { count: importResult.success })
+        : scannedFiles.length === 0
+          ? t('pull.noGguf')
+          : t('pull.foundGguf', { count: scannedFiles.length })
+
     return (
       <div className="border-t border-border/50 flex flex-col max-h-[50%]">
         <div className="flex items-center justify-between px-3 py-2">
-          <span className="text-xs font-medium">
-            {importing
-              ? `Importing ${importProgress.current}/${importProgress.total}...`
-              : importResult
-                ? importResult.failed > 0
-                  ? `Done: ${importResult.success} imported, ${importResult.failed} failed`
-                  : `Successfully imported ${importResult.success} model${importResult.success > 1 ? 's' : ''}`
-                : scannedFiles.length === 0
-                  ? 'No GGUF models found'
-                  : `Found ${scannedFiles.length} GGUF model${scannedFiles.length > 1 ? 's' : ''}`}
-          </span>
+          <span className="text-xs font-medium">{statusText}</span>
           <div className="flex items-center gap-1.5">
             {!importing && scannedFiles.length > 0 && (
               <Button
@@ -120,7 +122,7 @@ export function PullModelInput(): React.JSX.Element | null {
                 onClick={handleImportAll}
                 disabled={selected.size === 0}
               >
-                Import {selected.size > 0 ? `(${selected.size})` : ''}
+                {t('pull.import')} {selected.size > 0 ? `(${selected.size})` : ''}
               </Button>
             )}
             {importing && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
@@ -166,7 +168,7 @@ export function PullModelInput(): React.JSX.Element | null {
   return (
     <div className="flex items-center gap-2 px-3 py-2.5 border-t border-border/50">
       <Input
-        placeholder="Pull model (e.g. llama3.2:3b)"
+        placeholder={t('pull.placeholder')}
         value={modelName}
         onChange={(e) => setModelName(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -175,7 +177,7 @@ export function PullModelInput(): React.JSX.Element | null {
       <Button size="sm" className="h-8 shrink-0" onClick={handlePull} disabled={!modelName.trim()}>
         <Download className="h-3.5 w-3.5" />
       </Button>
-      <Button variant="outline" size="sm" className="h-8 shrink-0" onClick={handleScan} title="Import GGUF models from folder">
+      <Button variant="outline" size="sm" className="h-8 shrink-0" onClick={handleScan} title={t('pull.importTooltip')}>
         <FolderSearch className="h-3.5 w-3.5" />
       </Button>
     </div>

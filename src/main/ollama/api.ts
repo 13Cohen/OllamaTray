@@ -3,15 +3,31 @@ import { createHash } from 'crypto'
 import { basename } from 'path'
 import http from 'http'
 import https from 'https'
-import type { OllamaModel, PullProgress, RunningModel, ModelShowResponse, CreateFromModelRequest } from '../../shared/types'
+import type { OllamaModel, PullProgress, RunningModel, ModelShowResponse, CreateFromModelRequest, ChatMessage, ChatToken, ModelProfile } from '../../shared/types'
 import store from '../store'
 import { createLogger } from '../logger'
+import {
+  buildModelProfileFromGguf,
+  ensureModelProfile,
+  mergeProfileStopSequences,
+  saveModelProfile,
+  renderPromptFromProfile,
+  shouldUseProfileGenerateFallback
+} from './model-profile'
 
 const log = createLogger('ollama:api')
 
 function getBaseUrl(): string {
   const host = process.env.OLLAMA_HOST || store.get('ollamaHost') || '127.0.0.1:11434'
   return host.startsWith('http') ? host : `http://${host}`
+}
+
+function summarizeMessages(messages: ChatMessage[]): { count: number; roles: string[]; imageMessages: number } {
+  return {
+    count: messages.length,
+    roles: messages.map((message) => message.role),
+    imageMessages: messages.filter((message) => (message.images?.length ?? 0) > 0).length
+  }
 }
 
 export async function checkHealth(): Promise<boolean> {
@@ -285,7 +301,17 @@ export async function createModel(
     log.info(`Creating model "${name}" with files:`, files)
     onProgress({ modelName: name, status: 'Creating model...' })
 
-    const requestBody = JSON.stringify({ model: name, files, stream: true })
+    const profile = await buildModelProfileFromGguf(filePaths[0])
+    const request: Record<string, unknown> = { model: name, files, stream: true }
+    if (profile?.ollamaTemplate) {
+      request.template = profile.ollamaTemplate
+      if (profile.ollamaParameters && Object.keys(profile.ollamaParameters).length > 0) {
+        request.parameters = profile.ollamaParameters
+      }
+      log.info(`Recovered chat template metadata for "${name}" from GGUF`)
+    }
+
+    const requestBody = JSON.stringify(request)
     log.debug(`POST /api/create body: ${requestBody}`)
 
     const res = await fetch(`${getBaseUrl()}/api/create`, {
@@ -346,6 +372,8 @@ export async function createModel(
       throw new Error('Model creation did not report success')
     }
 
+    if (profile) saveModelProfile(name, profile)
+
     log.info(`=== Import complete: "${name}" SUCCESS ===`)
     onComplete(true)
   } catch (err) {
@@ -364,6 +392,144 @@ export async function showModel(name: string): Promise<ModelShowResponse> {
   })
   if (!res.ok) throw new Error(`Failed to show model: ${res.statusText}`)
   return res.json()
+}
+
+function getPartialTagSuffix(buffer: string, tag: string): string {
+  const maxLength = Math.min(buffer.length, tag.length - 1)
+  for (let length = maxLength; length > 0; length -= 1) {
+    if (tag.startsWith(buffer.slice(-length))) {
+      return buffer.slice(-length)
+    }
+  }
+  return ''
+}
+
+function emitTaggedText(
+  chunk: string,
+  state: { inThink: boolean; pending: string },
+  onToken: (token: Omit<ChatToken, 'requestId'>) => void
+): void {
+  state.pending += chunk
+
+  while (state.pending) {
+    const tag = state.inThink ? '</think>' : '<think>'
+    const index = state.pending.indexOf(tag)
+
+    if (index === -1) {
+      const partial = getPartialTagSuffix(state.pending, tag)
+      const emitText = partial ? state.pending.slice(0, -partial.length) : state.pending
+      if (emitText) {
+        onToken(state.inThink ? { content: '', thinking: emitText, done: false } : { content: emitText, done: false })
+      }
+      state.pending = partial
+      break
+    }
+
+    const emitText = state.pending.slice(0, index)
+    if (emitText) {
+      onToken(state.inThink ? { content: '', thinking: emitText, done: false } : { content: emitText, done: false })
+    }
+
+    state.pending = state.pending.slice(index + tag.length)
+    state.inThink = !state.inThink
+  }
+}
+
+function flushTaggedText(
+  state: { inThink: boolean; pending: string },
+  onToken: (token: Omit<ChatToken, 'requestId'>) => void
+): void {
+  if (!state.pending) return
+  onToken(state.inThink ? { content: '', thinking: state.pending, done: true } : { content: state.pending, done: true })
+  state.pending = ''
+}
+
+async function generateChatFallback(
+  model: string,
+  messages: ChatMessage[],
+  profile: ModelProfile,
+  controller: AbortController,
+  onToken: (token: Omit<ChatToken, 'requestId'>) => void,
+  onComplete: () => void,
+  options?: { think?: boolean; modelOptions?: Record<string, unknown> }
+): Promise<void> {
+  const prompt = renderPromptFromProfile(profile, messages, { think: options?.think })
+  if (!prompt) throw new Error('Model profile cannot render chat prompt')
+  const startedAt = Date.now()
+
+  const body = {
+    model,
+    prompt,
+    raw: true,
+    stream: true,
+    options: mergeProfileStopSequences(options?.modelOptions, profile)
+  }
+
+  log.info(`Using profile generate fallback`, {
+    model,
+    runtimeFormat: profile.runtimeFormat,
+    think: options?.think,
+    promptLength: prompt.length,
+    stopCount: profile.stop.length
+  })
+  log.debug(`POST /api/generate body: ${JSON.stringify(body)}`)
+
+  const res = await fetch(`${getBaseUrl()}/api/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal: controller.signal
+  })
+
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => res.statusText)
+    throw new Error(`Generate fallback failed: ${errorText}`)
+  }
+
+  const reader = res.body?.getReader()
+  if (!reader) throw new Error('No response body')
+
+  const decoder = new TextDecoder()
+  const tagState = { inThink: false, pending: '' }
+  let buffer = ''
+  let chunkCount = 0
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop() ?? ''
+
+    for (const line of lines) {
+      if (!line.trim()) continue
+      try {
+        const data = JSON.parse(line)
+        if (data.error) throw new Error(data.error)
+        chunkCount += 1
+        emitTaggedText(data.response ?? '', tagState, onToken)
+      } catch (e) {
+        if (e instanceof SyntaxError) continue
+        throw e
+      }
+    }
+  }
+
+  if (buffer.trim()) {
+    const data = JSON.parse(buffer)
+    if (data.error) throw new Error(data.error)
+    chunkCount += 1
+    emitTaggedText(data.response ?? '', tagState, onToken)
+  }
+
+  flushTaggedText(tagState, onToken)
+  log.info(`Profile generate fallback complete`, {
+    model,
+    elapsedMs: Date.now() - startedAt,
+    chunkCount
+  })
+  onComplete()
 }
 
 export async function copyModel(source: string, destination: string): Promise<void> {
@@ -463,4 +629,152 @@ export function cancelPull(name: string): boolean {
     return true
   }
   return false
+}
+
+// Phase 3: Chat
+
+let activeChatController: AbortController | null = null
+
+export async function chatWithModel(
+  model: string,
+  messages: ChatMessage[],
+  onToken: (token: Omit<ChatToken, 'requestId'>) => void,
+  onComplete: () => void,
+  options?: { think?: boolean; modelOptions?: Record<string, unknown> }
+): Promise<void> {
+  activeChatController?.abort()
+  const controller = new AbortController()
+  activeChatController = controller
+  const startedAt = Date.now()
+  const messageSummary = summarizeMessages(messages)
+
+  try {
+    log.info(`Chat request started`, {
+      model,
+      think: options?.think,
+      ...messageSummary
+    })
+    const modelInfo = await showModel(model)
+    const profile = await ensureModelProfile(model, modelInfo)
+    if (shouldUseProfileGenerateFallback(modelInfo, profile, messages)) {
+      log.info(`Chat path selected`, {
+        model,
+        path: 'profile-generate',
+        runtimeFormat: profile.runtimeFormat,
+        hasOllamaTemplate: Boolean(profile.ollamaTemplate)
+      })
+      await generateChatFallback(model, messages, profile, controller, onToken, onComplete, options)
+      return
+    }
+
+    const body: Record<string, unknown> = { model, messages, stream: true }
+    // Always explicitly set think to control thinking mode when the model supports it.
+    if (options?.think !== undefined) body.think = options.think
+    if (options?.modelOptions && Object.keys(options.modelOptions).length > 0) {
+      body.options = options.modelOptions
+    }
+
+    log.info(`Chat path selected`, {
+      model,
+      path: 'ollama-chat',
+      templatePreview: modelInfo.template.slice(0, 40),
+      capabilities: modelInfo.capabilities
+    })
+    log.debug(`POST /api/chat body: ${JSON.stringify(body)}`)
+
+    const res = await fetch(`${getBaseUrl()}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    })
+
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => res.statusText)
+      throw new Error(`Chat failed: ${errorText}`)
+    }
+
+    const reader = res.body?.getReader()
+    if (!reader) throw new Error('No response body')
+
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let chunkCount = 0
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() ?? ''
+
+      for (const line of lines) {
+        if (!line.trim()) continue
+        try {
+          const data = JSON.parse(line)
+          if (data.error) throw new Error(data.error)
+          chunkCount += 1
+          onToken({
+            content: data.message?.content ?? '',
+            thinking: data.message?.thinking,
+            done: data.done ?? false
+          })
+        } catch (e) {
+          if (e instanceof SyntaxError) continue
+          throw e
+        }
+      }
+    }
+
+    if (buffer.trim()) {
+      try {
+        const data = JSON.parse(buffer)
+        if (data.error) throw new Error(data.error)
+        chunkCount += 1
+        onToken({
+          content: data.message?.content ?? '',
+          thinking: data.message?.thinking,
+          done: data.done ?? true
+        })
+      } catch (e) {
+        if (e instanceof SyntaxError) {
+          // ignore trailing parse errors
+        } else {
+          throw e
+        }
+      }
+    }
+
+    log.info(`Ollama chat complete`, {
+      model,
+      elapsedMs: Date.now() - startedAt,
+      chunkCount
+    })
+    onComplete()
+  } catch (err) {
+    if (!controller.signal.aborted) {
+      log.error(`Chat request failed`, {
+        model,
+        elapsedMs: Date.now() - startedAt,
+        error: err instanceof Error ? err.message : String(err)
+      })
+      throw err
+    }
+    log.info(`Chat request aborted`, {
+      model,
+      elapsedMs: Date.now() - startedAt
+    })
+  } finally {
+    if (activeChatController === controller) {
+      activeChatController = null
+    }
+  }
+}
+
+export function cancelChat(): void {
+  if (activeChatController) {
+    activeChatController.abort()
+    activeChatController = null
+  }
 }

@@ -4,8 +4,10 @@ import { Button } from '@renderer/components/ui/button'
 import { Badge } from '@renderer/components/ui/badge'
 import { useOllamaStore } from '@renderer/stores/useOllamaStore'
 import { formatBytes } from '@renderer/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 export function RunningModels(): React.JSX.Element | null {
+  const { t } = useTranslation()
   const status = useOllamaStore((s) => s.status)
   const runningModels = useOllamaStore((s) => s.runningModels)
   const fetchRunningModels = useOllamaStore((s) => s.fetchRunningModels)
@@ -24,7 +26,7 @@ export function RunningModels(): React.JSX.Element | null {
     <div className="border-b border-border/50">
       <div className="flex items-center gap-1.5 px-4 py-1.5">
         <Cpu className="h-3 w-3 text-emerald-500" />
-        <span className="text-[11px] font-medium text-muted-foreground">Running</span>
+        <span className="text-[11px] font-medium text-muted-foreground">{t('running.title')}</span>
         <Badge variant="secondary" className="text-[10px] px-1 py-0 ml-auto">
           {runningModels.length}
         </Badge>
@@ -52,7 +54,7 @@ export function RunningModels(): React.JSX.Element | null {
               size="icon"
               className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
               onClick={() => unloadModel(model.name)}
-              title="Unload model"
+              title={t('running.unload')}
             >
               <Square className="h-3 w-3" />
             </Button>

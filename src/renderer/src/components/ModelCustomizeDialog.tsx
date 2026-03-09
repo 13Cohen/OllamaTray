@@ -9,6 +9,7 @@ import {
 import { Button } from '@renderer/components/ui/button'
 import { Input } from '@renderer/components/ui/input'
 import { useOllamaStore } from '@renderer/stores/useOllamaStore'
+import { Trans, useTranslation } from 'react-i18next'
 import type { OllamaModel } from '../../../shared/types'
 
 interface ModelCustomizeDialogProps {
@@ -22,6 +23,7 @@ export function ModelCustomizeDialog({
   open,
   onOpenChange
 }: ModelCustomizeDialogProps): React.JSX.Element {
+  const { t } = useTranslation()
   const createFromModel = useOllamaStore((s) => s.createFromModel)
   const [newName, setNewName] = useState('')
   const [systemPrompt, setSystemPrompt] = useState('')
@@ -71,16 +73,20 @@ export function ModelCustomizeDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogHeader>
-        <DialogTitle>Create Variant</DialogTitle>
+        <DialogTitle>{t('customizeDialog.title')}</DialogTitle>
         <DialogDescription>
-          Create a customized variant based on <strong>{model?.name}</strong>.
+          <Trans
+            i18nKey="customizeDialog.description"
+            values={{ name: model?.name ?? '' }}
+            components={{ strong: <strong /> }}
+          />
         </DialogDescription>
       </DialogHeader>
       <div className="mt-3 space-y-3">
         <div>
-          <label className="text-xs font-medium text-muted-foreground mb-1 block">Name *</label>
+          <label className="text-xs font-medium text-muted-foreground mb-1 block">{t('customizeDialog.nameLabel')}</label>
           <Input
-            placeholder="my-custom-model"
+            placeholder={t('customizeDialog.namePlaceholder')}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             className="text-sm"
@@ -88,9 +94,9 @@ export function ModelCustomizeDialog({
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-muted-foreground mb-1 block">System Prompt</label>
+          <label className="text-xs font-medium text-muted-foreground mb-1 block">{t('customizeDialog.systemPromptLabel')}</label>
           <textarea
-            placeholder="You are a helpful assistant..."
+            placeholder={t('customizeDialog.systemPromptPlaceholder')}
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}
             className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[60px] resize-y"
@@ -98,7 +104,7 @@ export function ModelCustomizeDialog({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Temperature</label>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">{t('customizeDialog.temperatureLabel')}</label>
             <Input
               type="number"
               step="0.1"
@@ -111,7 +117,7 @@ export function ModelCustomizeDialog({
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Context Length</label>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">{t('customizeDialog.contextLengthLabel')}</label>
             <Input
               type="number"
               step="1024"
@@ -126,10 +132,10 @@ export function ModelCustomizeDialog({
       </div>
       <DialogFooter>
         <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={creating}>
-          Cancel
+          {t('models.cancel')}
         </Button>
         <Button size="sm" onClick={handleCreate} disabled={!newName.trim() || creating}>
-          {creating ? 'Creating...' : 'Create'}
+          {creating ? t('customizeDialog.creating') : t('customizeDialog.create')}
         </Button>
       </DialogFooter>
     </Dialog>

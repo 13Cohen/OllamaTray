@@ -51,6 +51,7 @@ export interface ModelShowResponse {
   parameters: string
   template: string
   system: string
+  capabilities?: string[]
   details: OllamaModelDetails
   model_info: Record<string, unknown>
   license?: string
@@ -70,6 +71,17 @@ export interface ModelUsageStats {
   firstUsedAt: string
 }
 
+export interface ModelProfile {
+  schemaVersion: number
+  source: 'gguf'
+  parentModelPath?: string
+  rawChatTemplate?: string
+  runtimeFormat?: 'chatml'
+  stop: string[]
+  ollamaTemplate?: string
+  ollamaParameters?: Record<string, unknown>
+}
+
 export interface RunningModel {
   name: string
   model: string
@@ -81,6 +93,38 @@ export interface RunningModel {
 }
 
 export type ThemeMode = 'system' | 'light' | 'dark'
+
+export type Language = 'en' | 'zh-CN'
+
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant' | 'tool'
+  content: string
+  images?: string[] // base64 encoded images for multimodal models
+}
+
+export interface ChatRequest {
+  requestId: string
+  model: string
+  messages: ChatMessage[]
+  think?: boolean
+  options?: Record<string, unknown> // temperature, num_ctx, etc.
+}
+
+export interface ChatToken {
+  requestId: string
+  content: string
+  thinking?: string // separate thinking content when think=true
+  done: boolean
+}
+
+export interface ChatComplete {
+  requestId: string
+}
+
+export interface ChatError {
+  requestId: string
+  message: string
+}
 
 export interface GgufFileInfo {
   filePaths: string[]
@@ -124,4 +168,15 @@ export interface ElectronAPI {
   onThemeChanged: (callback: (shouldUseDark: boolean) => void) => () => void
   getNotificationsEnabled: () => Promise<boolean>
   setNotificationsEnabled: (enabled: boolean) => Promise<void>
+
+  // Phase 3: Chat
+  chat: (request: ChatRequest) => Promise<void>
+  cancelChat: () => Promise<void>
+  onChatToken: (callback: (token: ChatToken) => void) => () => void
+  onChatComplete: (callback: (event: ChatComplete) => void) => () => void
+  onChatError: (callback: (error: ChatError) => void) => () => void
+
+  // Phase 3: Language
+  getLanguage: () => Promise<Language>
+  setLanguage: (language: Language) => Promise<void>
 }

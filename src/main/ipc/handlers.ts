@@ -3,13 +3,14 @@ import { join, dirname } from 'path'
 import { homedir } from 'os'
 import { readdir, stat } from 'fs/promises'
 import { IPC } from '../../shared/channels'
-import type { GgufFileInfo, CreateFromModelRequest, ThemeMode } from '../../shared/types'
-import { checkHealth, getVersion, listModels, listRunning, unloadModel, deleteModel, pullModel, createModel, cancelPull, showModel, copyModel, createFromModel } from '../ollama/api'
+import type { GgufFileInfo, CreateFromModelRequest, ThemeMode, ChatRequest, Language } from '../../shared/types'
+import { checkHealth, getVersion, listModels, listRunning, unloadModel, deleteModel, pullModel, createModel, cancelPull, showModel, copyModel, createFromModel, chatWithModel, cancelChat } from '../ollama/api'
 import { startOllama, stopOllama, detectStartupSource } from '../ollama/service'
 import type { OllamaConfig, OllamaStatus } from '../../shared/types'
 import store from '../store'
 import { createLogger, getLogPath } from '../logger'
 import { notifyPullComplete, notifyImportComplete } from '../notifications'
+import { copyModelProfile, removeModelProfile } from '../ollama/model-profile'
 
 const log = createLogger('ipc')
 
@@ -188,6 +189,7 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null, onBef
 
   ipcMain.handle(IPC.DELETE_MODEL, async (_event, name: string) => {
     await deleteModel(name)
+    removeModelProfile(name)
   })
 
   ipcMain.handle(IPC.PULL_MODEL, async (event, name: string) => {
@@ -226,6 +228,7 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null, onBef
   // Phase 2: Model Copy
   ipcMain.handle(IPC.COPY_MODEL, async (_event, source: string, destination: string) => {
     await copyModel(source, destination)
+    copyModelProfile(source, destination)
   })
 
   // Phase 2: Model Customize (create variant from existing model)
@@ -246,6 +249,8 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null, onBef
         }
       }
     )
+
+    copyModelProfile(request.from, request.model)
   })
 
   // Phase 2: Usage Stats
@@ -287,5 +292,60 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null, onBef
 
   ipcMain.handle(IPC.SET_NOTIFICATIONS_ENABLED, (_event, enabled: boolean) => {
     store.set('notificationsEnabled', enabled)
+  })
+
+  // Phase 3: Chat
+  ipcMain.handle(IPC.CHAT, async (event, request: ChatRequest) => {
+    const win = getWindow()
+    const sender = win?.webContents ?? event.sender
+    log.info(`IPC CHAT received`, {
+      requestId: request.requestId,
+      model: request.model,
+      think: request.think,
+      messageCount: request.messages.length,
+      roles: request.messages.map((message) => message.role)
+    })
+
+    try {
+      await chatWithModel(
+        request.model,
+        request.messages,
+        (token) => {
+          if (!sender.isDestroyed()) {
+            sender.send(IPC.CHAT_TOKEN, { ...token, requestId: request.requestId })
+          }
+        },
+        () => {
+          if (!sender.isDestroyed()) {
+            sender.send(IPC.CHAT_COMPLETE, { requestId: request.requestId })
+          }
+        },
+        { think: request.think, modelOptions: request.options }
+      )
+      log.info(`IPC CHAT completed`, {
+        requestId: request.requestId,
+        model: request.model
+      })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown chat error'
+      log.error(`Chat error: ${message}`)
+      if (!sender.isDestroyed()) {
+        sender.send(IPC.CHAT_ERROR, { requestId: request.requestId, message })
+      }
+    }
+  })
+
+  ipcMain.handle(IPC.CANCEL_CHAT, () => {
+    log.info(`IPC CANCEL_CHAT received`)
+    cancelChat()
+  })
+
+  // Phase 3: Language
+  ipcMain.handle(IPC.GET_LANGUAGE, () => {
+    return store.get('language')
+  })
+
+  ipcMain.handle(IPC.SET_LANGUAGE, (_event, language: Language) => {
+    store.set('language', language)
   })
 }

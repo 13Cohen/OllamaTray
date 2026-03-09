@@ -3,7 +3,8 @@ import { ArrowLeft, Copy, Check, FolderOpen, RotateCcw, FileText, Sun, Moon, Mon
 import { Button } from '@renderer/components/ui/button'
 import { Input } from '@renderer/components/ui/input'
 import { useOllamaStore } from '@renderer/stores/useOllamaStore'
-import type { OllamaConfig, ThemeMode } from '../../../shared/types'
+import { useTranslation } from 'react-i18next'
+import type { OllamaConfig, ThemeMode, Language } from '../../../shared/types'
 
 interface SettingsProps {
   onBack: () => void
@@ -25,6 +26,7 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: b
 }
 
 export function Settings({ onBack }: SettingsProps): React.JSX.Element {
+  const { t, i18n } = useTranslation()
   const [config, setConfig] = useState<OllamaConfig>({ ollamaHost: '127.0.0.1:11434', ollamaModelsDir: '', defaultModelsDir: '' })
   const [copied, setCopied] = useState(false)
   const [dirty, setDirty] = useState(false)
@@ -33,6 +35,7 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
   const [launchAtLogin, setLaunchAtLogin] = useState(false)
   const [theme, setTheme] = useState<ThemeMode>('system')
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
+  const [language, setLanguage] = useState<Language>('en')
   const status = useOllamaStore((s) => s.status)
   const stopService = useOllamaStore((s) => s.stopService)
   const startService = useOllamaStore((s) => s.startService)
@@ -44,6 +47,7 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
     window.electronAPI.getLaunchAtLogin().then(setLaunchAtLogin)
     window.electronAPI.getTheme().then(setTheme)
     window.electronAPI.getNotificationsEnabled().then(setNotificationsEnabled)
+    window.electronAPI.getLanguage().then(setLanguage)
   }, [])
 
   const apiUrl = config.ollamaHost.startsWith('http')
@@ -102,19 +106,25 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
     await window.electronAPI.setNotificationsEnabled(enabled)
   }
 
+  const handleLanguageChange = async (newLang: Language): Promise<void> => {
+    setLanguage(newLang)
+    await window.electronAPI.setLanguage(newLang)
+    i18n.changeLanguage(newLang)
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50">
         <Button variant="ghost" size="sm" onClick={onBack} className="h-7 w-7 p-0">
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <span className="text-sm font-medium">Settings</span>
+        <span className="text-sm font-medium">{t('settings.title')}</span>
       </div>
 
       {needsRestart && (
         <div className="flex items-center justify-between px-4 py-2 bg-amber-500/10 border-b border-amber-500/20">
           <span className="text-xs text-amber-600 dark:text-amber-400">
-            Restart to apply changes
+            {t('settings.restartHint')}
           </span>
           <Button
             variant="outline"
@@ -124,7 +134,7 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
             className="h-6 text-xs px-2 gap-1"
           >
             <RotateCcw className={`h-3 w-3 ${restarting ? 'animate-spin' : ''}`} />
-            {restarting ? 'Restarting...' : 'Restart Now'}
+            {restarting ? t('settings.restarting') : t('settings.restartNow')}
           </Button>
         </div>
       )}
@@ -132,7 +142,7 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-5">
         {/* Ollama Host & Port */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground">Host & Port</label>
+          <label className="text-xs font-medium text-muted-foreground">{t('settings.hostLabel')}</label>
           <div className="flex items-center gap-2">
             <Input
               value={config.ollamaHost}
@@ -145,13 +155,13 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
             </Button>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Click copy for <span className="font-mono">{apiUrl}</span>
+            {t('settings.copyApiUrl')} <span className="font-mono">{apiUrl}</span>
           </p>
         </div>
 
         {/* Models directory */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground">Models Directory</label>
+          <label className="text-xs font-medium text-muted-foreground">{t('settings.modelsDir')}</label>
           <div className="flex items-center gap-2">
             <Input
               value={config.ollamaModelsDir}
@@ -172,18 +182,18 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
             </Button>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Ollama will read and store models from this directory. Leave empty for default.
+            {t('settings.modelsDirHint')}
           </p>
         </div>
 
         {/* Theme */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground">Theme</label>
+          <label className="text-xs font-medium text-muted-foreground">{t('settings.theme')}</label>
           <div className="flex items-center gap-1">
             {([
-              { value: 'system' as const, icon: Monitor, label: 'System' },
-              { value: 'light' as const, icon: Sun, label: 'Light' },
-              { value: 'dark' as const, icon: Moon, label: 'Dark' }
+              { value: 'system' as const, icon: Monitor, label: t('settings.themeSystem') },
+              { value: 'light' as const, icon: Sun, label: t('settings.themeLight') },
+              { value: 'dark' as const, icon: Moon, label: t('settings.themeDark') }
             ]).map(({ value, icon: Icon, label }) => (
               <Button
                 key={value}
@@ -199,11 +209,33 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
           </div>
         </div>
 
+        {/* Language */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">{t('settings.language')}</label>
+          <div className="flex items-center gap-1">
+            {([
+              { value: 'en' as const, label: 'English' },
+              { value: 'zh-CN' as const, label: '中文' }
+            ]).map(({ value, label }) => (
+              <Button
+                key={value}
+                variant={language === value ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleLanguageChange(value)}
+                className="flex-1 h-8 text-xs"
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground">{t('settings.languageHint')}</p>
+        </div>
+
         {/* Launch at Login */}
         <div className="flex items-center justify-between">
           <div>
-            <label className="text-xs font-medium">Launch at Login</label>
-            <p className="text-[11px] text-muted-foreground">Start OllamaTray when you log in</p>
+            <label className="text-xs font-medium">{t('settings.launchAtLogin')}</label>
+            <p className="text-[11px] text-muted-foreground">{t('settings.launchAtLoginHint')}</p>
           </div>
           <ToggleSwitch checked={launchAtLogin} onChange={handleLaunchAtLoginChange} />
         </div>
@@ -211,8 +243,8 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
         {/* Notifications */}
         <div className="flex items-center justify-between">
           <div>
-            <label className="text-xs font-medium">Notifications</label>
-            <p className="text-[11px] text-muted-foreground">Download complete, service alerts</p>
+            <label className="text-xs font-medium">{t('settings.notifications')}</label>
+            <p className="text-[11px] text-muted-foreground">{t('settings.notificationsHint')}</p>
           </div>
           <ToggleSwitch checked={notificationsEnabled} onChange={handleNotificationsChange} />
         </div>
@@ -220,7 +252,7 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
         {/* Logs */}
         {logPath && (
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Logs</label>
+            <label className="text-xs font-medium text-muted-foreground">{t('settings.logs')}</label>
             <Button
               variant="outline"
               size="sm"
@@ -249,11 +281,11 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
               className="w-full gap-1.5"
             >
               <RotateCcw className={`h-3.5 w-3.5 ${restarting ? 'animate-spin' : ''}`} />
-              {restarting ? 'Restarting...' : 'Save & Restart Service'}
+              {restarting ? t('settings.restarting') : t('settings.saveRestart')}
             </Button>
           ) : (
             <Button size="sm" onClick={handleSave} className="w-full">
-              Save
+              {t('settings.save')}
             </Button>
           )}
         </div>
