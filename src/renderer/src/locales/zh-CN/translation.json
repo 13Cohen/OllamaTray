@@ -115,6 +115,7 @@
     "back": "返回",
     "thinking": "思考中...",
     "loading": "加载模型中...",
+    "systemPromptLabel": "系统提示词",
     "systemPromptPlaceholder": "系统提示词（可选）",
     "enableThinking": "思考",
     "error": "错误：{{message}}",

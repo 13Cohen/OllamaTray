@@ -517,10 +517,14 @@ async function generateChatFallback(
   }
 
   if (buffer.trim()) {
-    const data = JSON.parse(buffer)
-    if (data.error) throw new Error(data.error)
-    chunkCount += 1
-    emitTaggedText(data.response ?? '', tagState, onToken)
+    try {
+      const data = JSON.parse(buffer)
+      if (data.error) throw new Error(data.error)
+      chunkCount += 1
+      emitTaggedText(data.response ?? '', tagState, onToken)
+    } catch (e) {
+      if (!(e instanceof SyntaxError)) throw e
+    }
   }
 
   flushTaggedText(tagState, onToken)

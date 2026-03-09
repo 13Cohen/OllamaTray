@@ -115,6 +115,7 @@
     "back": "Back",
     "thinking": "Thinking...",
     "loading": "Loading model...",
+    "systemPromptLabel": "System prompt",
     "systemPromptPlaceholder": "System prompt (optional)",
     "enableThinking": "Thinking",
     "error": "Error: {{message}}",
