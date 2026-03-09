@@ -84,7 +84,9 @@ export function ModelCustomizeDialog({
       </DialogHeader>
       <div className="mt-3 space-y-3">
         <div>
-          <label className="text-xs font-medium text-muted-foreground mb-1 block">{t('customizeDialog.nameLabel')}</label>
+          <label className="text-xs font-medium text-muted-foreground mb-1 block">
+            {t('customizeDialog.nameLabel')}
+          </label>
           <Input
             placeholder={t('customizeDialog.namePlaceholder')}
             value={newName}
@@ -94,7 +96,9 @@ export function ModelCustomizeDialog({
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-muted-foreground mb-1 block">{t('customizeDialog.systemPromptLabel')}</label>
+          <label className="text-xs font-medium text-muted-foreground mb-1 block">
+            {t('customizeDialog.systemPromptLabel')}
+          </label>
           <textarea
             placeholder={t('customizeDialog.systemPromptPlaceholder')}
             value={systemPrompt}
@@ -104,7 +108,9 @@ export function ModelCustomizeDialog({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">{t('customizeDialog.temperatureLabel')}</label>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">
+              {t('customizeDialog.temperatureLabel')}
+            </label>
             <Input
               type="number"
               step="0.1"
@@ -117,7 +123,9 @@ export function ModelCustomizeDialog({
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">{t('customizeDialog.contextLengthLabel')}</label>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">
+              {t('customizeDialog.contextLengthLabel')}
+            </label>
             <Input
               type="number"
               step="1024"

@@ -7,7 +7,8 @@ const api: ElectronAPI = {
   setConfig: (config) => ipcRenderer.invoke(IPC.SET_CONFIG, config),
   selectDirectory: () => ipcRenderer.invoke(IPC.SELECT_DIRECTORY),
   scanGgufModels: () => ipcRenderer.invoke(IPC.SCAN_GGUF_MODELS),
-  importModel: (name: string, filePaths: string[]) => ipcRenderer.invoke(IPC.IMPORT_MODEL, name, filePaths),
+  importModel: (name: string, filePaths: string[]) =>
+    ipcRenderer.invoke(IPC.IMPORT_MODEL, name, filePaths),
   getStatus: () => ipcRenderer.invoke(IPC.GET_STATUS),
   startService: () => ipcRenderer.invoke(IPC.START_SERVICE),
   stopService: () => ipcRenderer.invoke(IPC.STOP_SERVICE),
@@ -73,7 +74,8 @@ const api: ElectronAPI = {
   getTheme: () => ipcRenderer.invoke(IPC.GET_THEME),
   setTheme: (theme) => ipcRenderer.invoke(IPC.SET_THEME, theme),
   getNotificationsEnabled: () => ipcRenderer.invoke(IPC.GET_NOTIFICATIONS_ENABLED),
-  setNotificationsEnabled: (enabled: boolean) => ipcRenderer.invoke(IPC.SET_NOTIFICATIONS_ENABLED, enabled),
+  setNotificationsEnabled: (enabled: boolean) =>
+    ipcRenderer.invoke(IPC.SET_NOTIFICATIONS_ENABLED, enabled),
 
   // Phase 3: Chat
   chat: (request) => ipcRenderer.invoke(IPC.CHAT, request),

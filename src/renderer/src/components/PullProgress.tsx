@@ -14,8 +14,10 @@ export function PullProgress(): React.JSX.Element | null {
     <div className="border-t border-border/50">
       {Array.from(activeDownloads.values()).map((dl) => {
         const percent = dl.total > 0 ? (dl.completed / dl.total) * 100 : 0
-        const elapsed = (Date.now() - dl.startedAt) / 1000
-        const speed = elapsed > 0 && dl.completed > 0 ? dl.completed / elapsed : 0
+        const speed =
+          dl.speedSamples.length > 0
+            ? dl.speedSamples.reduce((a, b) => a + b, 0) / dl.speedSamples.length
+            : 0
         const remaining = speed > 0 && dl.total > 0 ? (dl.total - dl.completed) / speed : -1
 
         return (

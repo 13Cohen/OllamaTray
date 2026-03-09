@@ -56,7 +56,11 @@ export function startPolling(getWindow: () => BrowserWindow | null): void {
     const version = running ? await getVersion() : undefined
     const newStatus: OllamaStatus = { running, source, version }
 
-    if (newStatus.running !== lastStatus.running || newStatus.source !== lastStatus.source || newStatus.version !== lastStatus.version) {
+    if (
+      newStatus.running !== lastStatus.running ||
+      newStatus.source !== lastStatus.source ||
+      newStatus.version !== lastStatus.version
+    ) {
       lastStatus = newStatus
       onStatusChange?.(newStatus)
       const win = getWindow()

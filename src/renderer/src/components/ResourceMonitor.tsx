@@ -18,16 +18,22 @@ export function ResourceMonitor(): React.JSX.Element | null {
     <div className="border-b border-border/50">
       <div className="flex items-center gap-1.5 px-4 py-1.5">
         <Activity className="h-3 w-3 text-blue-500" />
-        <span className="text-[11px] font-medium text-muted-foreground">{t('resources.title')}</span>
+        <span className="text-[11px] font-medium text-muted-foreground">
+          {t('resources.title')}
+        </span>
       </div>
       <div className="px-4 pb-2 space-y-1.5">
         {/* Summary bar */}
         <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
           {totalVram > 0 && (
-            <span>{t('resources.vram')}: {formatBytes(totalVram)}</span>
+            <span>
+              {t('resources.vram')}: {formatBytes(totalVram)}
+            </span>
           )}
           {totalRam > 0 && (
-            <span>{t('resources.ram')}: {formatBytes(totalRam)}</span>
+            <span>
+              {t('resources.ram')}: {formatBytes(totalRam)}
+            </span>
           )}
         </div>
         {/* Per-model bars */}
@@ -39,7 +45,9 @@ export function ResourceMonitor(): React.JSX.Element | null {
             <div key={model.digest} className="space-y-0.5">
               <div className="flex items-center justify-between text-[10px]">
                 <span className="truncate text-muted-foreground">{model.name}</span>
-                <span className="text-muted-foreground shrink-0 ml-2">{formatBytes(model.size)}</span>
+                <span className="text-muted-foreground shrink-0 ml-2">
+                  {formatBytes(model.size)}
+                </span>
               </div>
               <div className="h-1.5 rounded-full bg-muted overflow-hidden flex">
                 {model.size_vram > 0 && (

@@ -18,7 +18,11 @@ interface ModelCopyDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-export function ModelCopyDialog({ model, open, onOpenChange }: ModelCopyDialogProps): React.JSX.Element {
+export function ModelCopyDialog({
+  model,
+  open,
+  onOpenChange
+}: ModelCopyDialogProps): React.JSX.Element {
   const { t } = useTranslation()
   const copyModel = useOllamaStore((s) => s.copyModel)
   const [newName, setNewName] = useState('')

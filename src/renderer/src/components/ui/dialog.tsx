@@ -30,14 +30,21 @@ function DialogHeader({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>): React.JSX.Element {
-  return <div className={cn('flex flex-col space-y-1.5 text-center sm:text-left', className)} {...props} />
+  return (
+    <div
+      className={cn('flex flex-col space-y-1.5 text-center sm:text-left', className)}
+      {...props}
+    />
+  )
 }
 
 function DialogTitle({
   className,
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>): React.JSX.Element {
-  return <h3 className={cn('text-lg font-semibold leading-none tracking-tight', className)} {...props} />
+  return (
+    <h3 className={cn('text-lg font-semibold leading-none tracking-tight', className)} {...props} />
+  )
 }
 
 function DialogDescription({
@@ -51,7 +58,15 @@ function DialogFooter({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>): React.JSX.Element {
-  return <div className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4', className)} {...props} />
+  return (
+    <div
+      className={cn(
+        'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4',
+        className
+      )}
+      {...props}
+    />
+  )
 }
 
 export { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter }

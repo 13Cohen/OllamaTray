@@ -51,7 +51,12 @@ export function ModelList({ onOpenChat }: ModelListProps): React.JSX.Element {
     toggleSortOrder()
   }
 
-  const sortLabel = sortBy === 'name' ? t('models.sortName') : sortBy === 'size' ? t('models.sortSize') : t('models.sortRecent')
+  const sortLabel =
+    sortBy === 'name'
+      ? t('models.sortName')
+      : sortBy === 'size'
+        ? t('models.sortSize')
+        : t('models.sortRecent')
 
   return (
     <>
@@ -74,7 +79,9 @@ export function ModelList({ onOpenChat }: ModelListProps): React.JSX.Element {
       <ScrollArea className="flex-1">
         {filteredModels.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-muted-foreground py-12">
-            <p className="text-sm">{searchQuery ? t('models.noMatching') : t('models.noInstalled')}</p>
+            <p className="text-sm">
+              {searchQuery ? t('models.noMatching') : t('models.noInstalled')}
+            </p>
           </div>
         ) : (
           <div className="divide-y divide-border/30">

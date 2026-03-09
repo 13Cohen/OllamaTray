@@ -108,7 +108,9 @@ export function ModelDetailDialog({
             {/* System Prompt */}
             {detail.system && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">{t('detail.systemPrompt')}</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1">
+                  {t('detail.systemPrompt')}
+                </p>
                 <pre className="text-xs bg-muted/50 rounded p-2 whitespace-pre-wrap break-words max-h-[80px] overflow-auto">
                   {detail.system}
                 </pre>
@@ -118,7 +120,9 @@ export function ModelDetailDialog({
             {/* Template */}
             {detail.template && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">{t('detail.template')}</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1">
+                  {t('detail.template')}
+                </p>
                 <pre className="text-xs bg-muted/50 rounded p-2 whitespace-pre-wrap break-words max-h-[80px] overflow-auto">
                   {detail.template}
                 </pre>
@@ -128,7 +132,9 @@ export function ModelDetailDialog({
             {/* Parameters */}
             {detail.parameters && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">{t('detail.parameters')}</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1">
+                  {t('detail.parameters')}
+                </p>
                 <pre className="text-xs bg-muted/50 rounded p-2 whitespace-pre-wrap break-words max-h-[60px] overflow-auto">
                   {detail.parameters}
                 </pre>
@@ -138,7 +144,9 @@ export function ModelDetailDialog({
             {/* License */}
             {detail.license && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">{t('detail.license')}</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1">
+                  {t('detail.license')}
+                </p>
                 <pre className="text-xs bg-muted/50 rounded p-2 whitespace-pre-wrap break-words max-h-[60px] overflow-auto">
                   {detail.license}
                 </pre>
@@ -148,7 +156,9 @@ export function ModelDetailDialog({
             {/* Usage Stats */}
             {stats && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">{t('detail.usage')}</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1">
+                  {t('detail.usage')}
+                </p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                   <span className="text-muted-foreground">{t('detail.timesUsed')}</span>
                   <span>{stats.useCount}</span>
