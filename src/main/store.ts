@@ -1,5 +1,5 @@
 import Store from 'electron-store'
-import type { ModelUsageStats, ThemeMode } from '../shared/types'
+import type { ModelUsageStats, ThemeMode, Language, ModelProfile } from '../shared/types'
 
 interface StoreSchema {
   envVars: Record<string, string>
@@ -7,9 +7,11 @@ interface StoreSchema {
   ollamaModelsDir: string
   windowBounds: { x: number; y: number } | null
   modelUsageStats: Record<string, ModelUsageStats>
+  modelProfiles: Record<string, ModelProfile>
   launchAtLogin: boolean
   theme: ThemeMode
   notificationsEnabled: boolean
+  language: Language
 }
 
 const store = new Store<StoreSchema>({
@@ -19,9 +21,11 @@ const store = new Store<StoreSchema>({
     ollamaModelsDir: '',
     windowBounds: null,
     modelUsageStats: {},
+    modelProfiles: {},
     launchAtLogin: false,
     theme: 'system',
-    notificationsEnabled: true
+    notificationsEnabled: true,
+    language: 'en'
   }
 })
 

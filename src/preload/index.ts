@@ -73,7 +73,36 @@ const api: ElectronAPI = {
   getTheme: () => ipcRenderer.invoke(IPC.GET_THEME),
   setTheme: (theme) => ipcRenderer.invoke(IPC.SET_THEME, theme),
   getNotificationsEnabled: () => ipcRenderer.invoke(IPC.GET_NOTIFICATIONS_ENABLED),
-  setNotificationsEnabled: (enabled: boolean) => ipcRenderer.invoke(IPC.SET_NOTIFICATIONS_ENABLED, enabled)
+  setNotificationsEnabled: (enabled: boolean) => ipcRenderer.invoke(IPC.SET_NOTIFICATIONS_ENABLED, enabled),
+
+  // Phase 3: Chat
+  chat: (request) => ipcRenderer.invoke(IPC.CHAT, request),
+  cancelChat: () => ipcRenderer.invoke(IPC.CANCEL_CHAT),
+  onChatToken: (callback) => {
+    const handler = (_event: Electron.IpcRendererEvent, ...args: unknown[]): void => {
+      callback(args[0] as Parameters<typeof callback>[0])
+    }
+    ipcRenderer.on(IPC.CHAT_TOKEN, handler)
+    return () => ipcRenderer.removeListener(IPC.CHAT_TOKEN, handler)
+  },
+  onChatComplete: (callback) => {
+    const handler = (_event: Electron.IpcRendererEvent, ...args: unknown[]): void => {
+      callback(args[0] as Parameters<typeof callback>[0])
+    }
+    ipcRenderer.on(IPC.CHAT_COMPLETE, handler)
+    return () => ipcRenderer.removeListener(IPC.CHAT_COMPLETE, handler)
+  },
+  onChatError: (callback) => {
+    const handler = (_event: Electron.IpcRendererEvent, ...args: unknown[]): void => {
+      callback(args[0] as Parameters<typeof callback>[0])
+    }
+    ipcRenderer.on(IPC.CHAT_ERROR, handler)
+    return () => ipcRenderer.removeListener(IPC.CHAT_ERROR, handler)
+  },
+
+  // Phase 3: Language
+  getLanguage: () => ipcRenderer.invoke(IPC.GET_LANGUAGE),
+  setLanguage: (language) => ipcRenderer.invoke(IPC.SET_LANGUAGE, language)
 }
 
 if (process.contextIsolated) {

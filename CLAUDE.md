@@ -33,6 +33,7 @@ All API calls go through `src/main/ollama/api.ts`. The base URL is resolved from
 | `/api/show` | POST | Get model details (parameters, template, system, license) |
 | `/api/copy` | POST | Copy model to new name |
 | `/api/create` | POST | Create model from blobs (streaming response) |
+| `/api/chat` | POST | Chat with model (streaming response) |
 
 ### GGUF Model Import Flow (Critical)
 
@@ -124,13 +125,17 @@ src/main/
   ollama/service.ts Cross-platform process management (spawn/kill ollama)
   ollama/status-poller.ts  Periodic health + version polling
   ipc/handlers.ts   All IPC handlers (bridges renderer ↔ main)
-  store.ts          electron-store for persistent config (host, theme, launchAtLogin, notifications)
+  store.ts          electron-store for persistent config (host, theme, launchAtLogin, notifications, language)
 src/preload/        contextBridge typed API
 src/renderer/
+  i18n.ts           i18next configuration (en + zh-CN)
+  locales/          Translation JSON files
   stores/           Zustand store
   components/       React UI components
-    Settings.tsx    Host/port, models dir, theme, launch at login, notifications
+    Settings.tsx    Host/port, models dir, theme, language, launch at login, notifications
     RunningModels.tsx  Running models list with unload button
+    ResourceMonitor.tsx  GPU/memory usage visualization per model
+    ChatTest.tsx    Lightweight chat interface for testing models
     VersionWarning.tsx  Ollama version check banner
     PullModelInput.tsx  Model pull + GGUF scan/import UI
 e2e/                Playwright tests + mock Ollama HTTP server
@@ -174,6 +179,13 @@ All channels are defined in `src/shared/channels.ts`. The preload bridge (`src/p
 | `app:theme-changed` | event | Broadcast theme changes |
 | `app:get-notifications-enabled` | invoke | Get notifications setting |
 | `app:set-notifications-enabled` | invoke | Set notifications setting |
+| `ollama:chat` | invoke | Chat with model (streaming) |
+| `ollama:cancel-chat` | invoke | Cancel in-progress chat |
+| `ollama:chat-token` | event | Broadcast chat token (streaming content) |
+| `ollama:chat-complete` | event | Broadcast chat completion |
+| `ollama:chat-error` | event | Broadcast chat error to renderer |
+| `app:get-language` | invoke | Get language setting (en/zh-CN) |
+| `app:set-language` | invoke | Set language |
 
 ## Configurable Ollama Host
 
@@ -188,3 +200,5 @@ The Ollama server address is configurable via Settings UI. Stored in `electron-s
 - UI uses hand-rolled shadcn-style components in `src/renderer/src/components/ui/`
 - Tailwind CSS v4 via `@tailwindcss/vite`
 - Use `createLogger(tag)` for logging in main process modules
+- i18n via `i18next` + `react-i18next`, translations in `src/renderer/src/locales/`
+- All UI strings must use `useTranslation()` hook, never hardcode text

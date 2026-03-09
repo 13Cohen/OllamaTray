@@ -37,5 +37,16 @@ export const IPC = {
   SET_THEME: 'app:set-theme',
   THEME_CHANGED: 'app:theme-changed',
   GET_NOTIFICATIONS_ENABLED: 'app:get-notifications-enabled',
-  SET_NOTIFICATIONS_ENABLED: 'app:set-notifications-enabled'
+  SET_NOTIFICATIONS_ENABLED: 'app:set-notifications-enabled',
+
+  // Phase 3: Chat
+  CHAT: 'ollama:chat',
+  CANCEL_CHAT: 'ollama:cancel-chat',
+  CHAT_TOKEN: 'ollama:chat-token',
+  CHAT_COMPLETE: 'ollama:chat-complete',
+  CHAT_ERROR: 'ollama:chat-error',
+
+  // Phase 3: Language
+  GET_LANGUAGE: 'app:get-language',
+  SET_LANGUAGE: 'app:set-language'
 } as const

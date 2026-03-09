@@ -9,12 +9,14 @@ import {
   DialogFooter
 } from '@renderer/components/ui/dialog'
 import { useOllamaStore } from '@renderer/stores/useOllamaStore'
+import { useTranslation } from 'react-i18next'
 
 interface ServiceStatusProps {
   onOpenSettings: () => void
 }
 
 export function ServiceStatus({ onOpenSettings }: ServiceStatusProps): React.JSX.Element {
+  const { t } = useTranslation()
   const status = useOllamaStore((s) => s.status)
   const loading = useOllamaStore((s) => s.loading)
   const startService = useOllamaStore((s) => s.startService)
@@ -51,11 +53,11 @@ export function ServiceStatus({ onOpenSettings }: ServiceStatusProps): React.JSX
   const sourceLabel = (): string => {
     switch (status.source) {
       case 'managed':
-        return 'Started by Ollama Manager'
+        return t('service.startedByManager')
       case 'brew':
-        return 'Started by Homebrew'
+        return t('service.startedByBrew')
       case 'external':
-        return 'Started externally'
+        return t('service.startedExternally')
       default:
         return ''
     }
@@ -70,7 +72,7 @@ export function ServiceStatus({ onOpenSettings }: ServiceStatusProps): React.JSX
           />
           <div>
             <div className="text-sm font-medium">
-              Ollama {status.running ? 'Running' : 'Stopped'}
+              Ollama {status.running ? t('service.running') : t('service.stopped')}
             </div>
             {status.running && (
               <div className="text-[11px] text-muted-foreground">
@@ -89,7 +91,7 @@ export function ServiceStatus({ onOpenSettings }: ServiceStatusProps): React.JSX
             size="icon"
             className="h-7 w-7"
             onClick={handleTogglePin}
-            title={pinned ? '取消常驻' : '常驻面板'}
+            title={pinned ? t('service.unpinPanel') : t('service.pinPanel')}
           >
             {pinned ? (
               <Pin className="h-3.5 w-3.5 text-primary" />
@@ -108,25 +110,24 @@ export function ServiceStatus({ onOpenSettings }: ServiceStatusProps): React.JSX
             ) : (
               <Power className="h-3.5 w-3.5" />
             )}
-            {status.running ? 'Stop' : 'Start'}
+            {status.running ? t('service.stop') : t('service.start')}
           </Button>
         </div>
       </div>
 
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogHeader>
-          <DialogTitle>Stop Ollama?</DialogTitle>
+          <DialogTitle>{t('service.stopConfirmTitle')}</DialogTitle>
           <DialogDescription>
-            Ollama was not started by this app ({sourceLabel().toLowerCase()}). Stopping it may
-            affect other applications using Ollama.
+            {t('service.stopConfirmDesc', { source: sourceLabel().toLowerCase() })}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={() => setShowConfirm(false)}>
-            Cancel
+            {t('models.cancel')}
           </Button>
           <Button variant="destructive" size="sm" onClick={handleConfirmStop}>
-            Stop Anyway
+            {t('service.stopAnyway')}
           </Button>
         </DialogFooter>
       </Dialog>

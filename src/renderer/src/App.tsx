@@ -1,19 +1,26 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import './i18n'
 import { ServiceStatus } from './components/ServiceStatus'
 import { RunningModels } from './components/RunningModels'
+import { ResourceMonitor } from './components/ResourceMonitor'
 import { ModelList } from './components/ModelList'
 import { PullModelInput } from './components/PullModelInput'
 import { PullProgress } from './components/PullProgress'
 import { ErrorBanner } from './components/ErrorBanner'
 import { VersionWarning } from './components/VersionWarning'
 import { Settings } from './components/Settings'
+import { ChatTest } from './components/ChatTest'
 import { useOllamaStore } from './stores/useOllamaStore'
 
 function applyThemeClass(shouldUseDark: boolean): void {
   document.documentElement.classList.toggle('dark', shouldUseDark)
 }
 
+type View = 'main' | 'settings' | 'chat'
+
 function App(): React.JSX.Element {
+  const { i18n } = useTranslation()
   const fetchStatus = useOllamaStore((s) => s.fetchStatus)
   const fetchModels = useOllamaStore((s) => s.fetchModels)
   const fetchUsageStats = useOllamaStore((s) => s.fetchUsageStats)
@@ -21,10 +28,16 @@ function App(): React.JSX.Element {
   const updatePullProgress = useOllamaStore((s) => s.updatePullProgress)
   const removePullProgress = useOllamaStore((s) => s.removePullProgress)
   const status = useOllamaStore((s) => s.status)
-  const [view, setView] = useState<'main' | 'settings'>('main')
+  const [view, setView] = useState<View>('main')
+  const [chatModel, setChatModel] = useState<string | undefined>()
 
   useEffect(() => {
     fetchStatus()
+
+    // Load saved language
+    window.electronAPI.getLanguage().then((lang) => {
+      i18n.changeLanguage(lang)
+    })
 
     // Initialize theme from system preference, main process will send correct value
     applyThemeClass(window.matchMedia('(prefers-color-scheme: dark)').matches)
@@ -76,10 +89,23 @@ function App(): React.JSX.Element {
     }
   }, [status.running])
 
+  const openChat = (modelName?: string): void => {
+    setChatModel(modelName)
+    setView('chat')
+  }
+
   if (view === 'settings') {
     return (
       <div className="flex flex-col h-full rounded-lg overflow-hidden">
         <Settings onBack={() => setView('main')} />
+      </div>
+    )
+  }
+
+  if (view === 'chat') {
+    return (
+      <div className="flex flex-col h-full rounded-lg overflow-hidden">
+        <ChatTest initialModel={chatModel} onBack={() => setView('main')} />
       </div>
     )
   }
@@ -90,7 +116,8 @@ function App(): React.JSX.Element {
       <VersionWarning />
       <ServiceStatus onOpenSettings={() => setView('settings')} />
       <RunningModels />
-      <ModelList />
+      <ResourceMonitor />
+      <ModelList onOpenChat={openChat} />
       <PullProgress />
       <PullModelInput />
     </div>

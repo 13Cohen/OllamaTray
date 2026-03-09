@@ -9,9 +9,15 @@ import { ModelDetailDialog } from './ModelDetailDialog'
 import { ModelCopyDialog } from './ModelCopyDialog'
 import { ModelCustomizeDialog } from './ModelCustomizeDialog'
 import { useOllamaStore, useFilteredModels } from '@renderer/stores/useOllamaStore'
+import { useTranslation } from 'react-i18next'
 import type { OllamaModel } from '../../../shared/types'
 
-export function ModelList(): React.JSX.Element {
+interface ModelListProps {
+  onOpenChat: (modelName: string) => void
+}
+
+export function ModelList({ onOpenChat }: ModelListProps): React.JSX.Element {
+  const { t } = useTranslation()
   const status = useOllamaStore((s) => s.status)
   const searchQuery = useOllamaStore((s) => s.searchQuery)
   const setSearchQuery = useOllamaStore((s) => s.setSearchQuery)
@@ -31,7 +37,7 @@ export function ModelList(): React.JSX.Element {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground py-12">
         <Package className="h-8 w-8 mb-2 opacity-40" />
-        <p className="text-sm">Start Ollama to view models</p>
+        <p className="text-sm">{t('models.startToView')}</p>
       </div>
     )
   }
@@ -45,7 +51,7 @@ export function ModelList(): React.JSX.Element {
     toggleSortOrder()
   }
 
-  const sortLabel = sortBy === 'name' ? 'Name' : sortBy === 'size' ? 'Size' : 'Recent'
+  const sortLabel = sortBy === 'name' ? t('models.sortName') : sortBy === 'size' ? t('models.sortSize') : t('models.sortRecent')
 
   return (
     <>
@@ -53,7 +59,7 @@ export function ModelList(): React.JSX.Element {
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
-            placeholder="Search models..."
+            placeholder={t('models.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-8 h-8 text-xs"
@@ -68,7 +74,7 @@ export function ModelList(): React.JSX.Element {
       <ScrollArea className="flex-1">
         {filteredModels.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-muted-foreground py-12">
-            <p className="text-sm">{searchQuery ? 'No matching models' : 'No models installed'}</p>
+            <p className="text-sm">{searchQuery ? t('models.noMatching') : t('models.noInstalled')}</p>
           </div>
         ) : (
           <div className="divide-y divide-border/30">
@@ -108,6 +114,10 @@ export function ModelList(): React.JSX.Element {
         onCustomize={(m) => {
           setDetailTarget(null)
           setCustomizeTarget(m)
+        }}
+        onChat={(m) => {
+          setDetailTarget(null)
+          onOpenChat(m.name)
         }}
       />
 

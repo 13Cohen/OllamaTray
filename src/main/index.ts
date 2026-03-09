@@ -18,6 +18,17 @@ let tray: Tray | null = null
 let window: BrowserWindow | null = null
 let pinned = false
 
+// Tray menu translations keyed by language
+const trayLabels: Record<string, { open: string; start: string; stop: string; quit: string }> = {
+  en: { open: 'Open Panel', start: 'Start Service', stop: 'Stop Service', quit: 'Quit' },
+  'zh-CN': { open: '打开面板', start: '启动服务', stop: '停止服务', quit: '退出' }
+}
+
+function getTrayLabels(): { open: string; start: string; stop: string; quit: string } {
+  const lang = store.get('language') || 'en'
+  return trayLabels[lang] || trayLabels.en
+}
+
 function getWindow(): BrowserWindow | null {
   return window
 }
@@ -124,14 +135,15 @@ function showWindow(): void {
 }
 
 function buildTrayMenu(running: boolean): Menu {
+  const labels = getTrayLabels()
   return Menu.buildFromTemplate([
     {
-      label: '打开面板',
+      label: labels.open,
       click: showWindow
     },
     { type: 'separator' },
     {
-      label: running ? '停止服务' : '启动服务',
+      label: running ? labels.stop : labels.start,
       click: (): void => {
         if (running) {
           stopOllama()
@@ -142,7 +154,7 @@ function buildTrayMenu(running: boolean): Menu {
     },
     { type: 'separator' },
     {
-      label: '退出',
+      label: labels.quit,
       click: (): void => {
         stopOllama()
         app.quit()
@@ -185,6 +197,12 @@ app.whenReady().then(() => {
     tray?.popUpContextMenu()
   })
 
+  let previousRunning = false
+
+  store.onDidChange('language', () => {
+    updateTrayIcon(previousRunning)
+  })
+
   window = createWindow()
 
   let intentionalStop = false
@@ -210,7 +228,6 @@ app.whenReady().then(() => {
     }
   })
 
-  let previousRunning = false
   setOnStatusChange((status) => {
     // Notify if service stopped unexpectedly (not via user action)
     if (previousRunning && !status.running && !intentionalStop) {
