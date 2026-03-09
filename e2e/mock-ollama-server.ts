@@ -240,9 +240,24 @@ export class MockOllamaServer {
         const totalSize = 1_000_000
         const steps = [
           { status: 'pulling manifest' },
-          { status: 'pulling sha256:abc123', digest: 'sha256:abc123', total: totalSize, completed: 0 },
-          { status: 'pulling sha256:abc123', digest: 'sha256:abc123', total: totalSize, completed: 500_000 },
-          { status: 'pulling sha256:abc123', digest: 'sha256:abc123', total: totalSize, completed: totalSize },
+          {
+            status: 'pulling sha256:abc123',
+            digest: 'sha256:abc123',
+            total: totalSize,
+            completed: 0
+          },
+          {
+            status: 'pulling sha256:abc123',
+            digest: 'sha256:abc123',
+            total: totalSize,
+            completed: 500_000
+          },
+          {
+            status: 'pulling sha256:abc123',
+            digest: 'sha256:abc123',
+            total: totalSize,
+            completed: totalSize
+          },
           { status: 'verifying sha256 digest' },
           { status: 'writing manifest' },
           { status: `success` }

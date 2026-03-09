@@ -6,6 +6,7 @@
 - **Typecheck**: `pnpm run typecheck`
 - **E2E tests**: `pnpm run test:e2e`
 - **Build**: `pnpm run build:mac` / `pnpm run build:win`
+- **Release**: `pnpm version patch && git push --follow-tags` (triggers GitHub Actions)
 
 ## Ollama Version Requirement
 
@@ -117,6 +118,7 @@ log.error('Failed to connect', { url })
 ## Architecture
 
 ```
+.github/workflows/  CI (ci.yml) and Release (release.yml) pipelines
 src/shared/         Types, IPC channels, constants (shared between main & renderer)
 src/main/
   logger.ts         Tagged file-based logging (createLogger, getLogPath)
@@ -186,6 +188,48 @@ All channels are defined in `src/shared/channels.ts`. The preload bridge (`src/p
 | `ollama:chat-error` | event | Broadcast chat error to renderer |
 | `app:get-language` | invoke | Get language setting (en/zh-CN) |
 | `app:set-language` | invoke | Set language |
+
+## CI/CD (GitHub Actions)
+
+Workflows are in `.github/workflows/`.
+
+### CI (`ci.yml`)
+
+- **Triggers**: push/PR to `main`
+- **Jobs**: typecheck, lint (parallel) → e2e tests (macOS runner)
+- Uses `concurrency` to auto-cancel duplicate runs
+
+### Release (`release.yml`)
+
+- **Triggers**: push tag `v*` (e.g. `v1.0.0`)
+- **Jobs**:
+  - `build-mac`: matrix build for arm64 + x64 DMG
+  - `build-win`: builds x64 + arm64 NSIS installer
+  - `publish`: downloads all artifacts → creates Draft GitHub Release
+- electron-builder `publish` config points to GitHub Releases (`electron-builder.yml`)
+
+### Release Flow
+
+```bash
+pnpm version patch        # bumps version, creates git tag
+git push --follow-tags    # triggers release workflow
+# → GitHub Actions builds all platforms
+# → Draft Release created → manually publish when ready
+```
+
+### macOS Code Signing & Notarization
+
+Configured in `electron-builder.yml` via `notarize.teamId: ${env.APPLE_TEAM_ID}`. Requires these GitHub Secrets:
+
+| Secret | Purpose |
+|---|---|
+| `MAC_CERTIFICATE` | .p12 certificate (base64 encoded) |
+| `MAC_CERTIFICATE_PASSWORD` | Certificate password |
+| `APPLE_ID` | Apple Developer account email |
+| `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password for notarization |
+| `APPLE_TEAM_ID` | Apple Developer Team ID |
+
+Without these secrets, builds proceed unsigned (fine for development).
 
 ## Configurable Ollama Host
 

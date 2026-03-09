@@ -3,8 +3,29 @@ import { join, dirname } from 'path'
 import { homedir } from 'os'
 import { readdir, stat } from 'fs/promises'
 import { IPC } from '../../shared/channels'
-import type { GgufFileInfo, CreateFromModelRequest, ThemeMode, ChatRequest, Language } from '../../shared/types'
-import { checkHealth, getVersion, listModels, listRunning, unloadModel, deleteModel, pullModel, createModel, cancelPull, showModel, copyModel, createFromModel, chatWithModel, cancelChat } from '../ollama/api'
+import type {
+  GgufFileInfo,
+  CreateFromModelRequest,
+  ThemeMode,
+  ChatRequest,
+  Language
+} from '../../shared/types'
+import {
+  checkHealth,
+  getVersion,
+  listModels,
+  listRunning,
+  unloadModel,
+  deleteModel,
+  pullModel,
+  createModel,
+  cancelPull,
+  showModel,
+  copyModel,
+  createFromModel,
+  chatWithModel,
+  cancelChat
+} from '../ollama/api'
 import { startOllama, stopOllama, detectStartupSource } from '../ollama/service'
 import type { OllamaConfig, OllamaStatus } from '../../shared/types'
 import store from '../store'
@@ -33,7 +54,10 @@ function getServiceEnvVars(): Record<string, string> {
   return { ...env, ...store.get('envVars') }
 }
 
-export function registerIpcHandlers(getWindow: () => BrowserWindow | null, onBeforeStop?: () => void): void {
+export function registerIpcHandlers(
+  getWindow: () => BrowserWindow | null,
+  onBeforeStop?: () => void
+): void {
   ipcMain.handle(IPC.GET_CONFIG, (): OllamaConfig => {
     return {
       ollamaHost: store.get('ollamaHost'),
@@ -110,7 +134,10 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null, onBef
         models.push({
           filePaths: [file.filePath],
           fileName: file.fileName,
-          suggestedName: file.fileName.replace(/\.gguf$/i, '').toLowerCase().replace(/[^a-z0-9._:-]/g, '-'),
+          suggestedName: file.fileName
+            .replace(/\.gguf$/i, '')
+            .toLowerCase()
+            .replace(/[^a-z0-9._:-]/g, '-'),
           sizeBytes: file.sizeBytes
         })
       }

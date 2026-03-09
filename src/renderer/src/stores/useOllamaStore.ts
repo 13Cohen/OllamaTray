@@ -1,5 +1,13 @@
 import { create } from 'zustand'
-import type { OllamaModel, OllamaStatus, PullProgress, RunningModel, ModelShowResponse, CreateFromModelRequest, ModelUsageStats } from '../../../shared/types'
+import type {
+  OllamaModel,
+  OllamaStatus,
+  PullProgress,
+  RunningModel,
+  ModelShowResponse,
+  CreateFromModelRequest,
+  ModelUsageStats
+} from '../../../shared/types'
 
 export type SortBy = 'name' | 'size' | 'modified_at'
 export type SortOrder = 'asc' | 'desc'
@@ -116,7 +124,12 @@ export const useOllamaStore = create<OllamaState>((set, get) => ({
         if (elapsed > 0) {
           const byteDiff = progress.completed - existing.completed
           if (byteDiff > 0) {
-            speedSamples = [...speedSamples.slice(-4), byteDiff / ((now - existing.startedAt) / 1000 - (speedSamples.length > 0 ? speedSamples.length * 0.5 : 0))]
+            speedSamples = [
+              ...speedSamples.slice(-4),
+              byteDiff /
+                ((now - existing.startedAt) / 1000 -
+                  (speedSamples.length > 0 ? speedSamples.length * 0.5 : 0))
+            ]
           }
         }
       }
@@ -127,7 +140,7 @@ export const useOllamaStore = create<OllamaState>((set, get) => ({
         total: progress.total ?? existing?.total ?? 0,
         completed: progress.completed ?? existing?.completed ?? 0,
         startedAt: existing?.startedAt ?? now,
-        speedSamples: progress.completed ? speedSamples : existing?.speedSamples ?? []
+        speedSamples: progress.completed ? speedSamples : (existing?.speedSamples ?? [])
       })
       return { activeDownloads: downloads }
     })

@@ -51,9 +51,16 @@ export function copyModelProfile(source: string, destination: string): void {
 }
 
 function extractEosToken(metadata: Record<string, unknown>): string | undefined {
-  const tokens = Array.isArray(metadata['tokenizer.ggml.tokens']) ? metadata['tokenizer.ggml.tokens'] : []
-  const eosTokenId = typeof metadata['tokenizer.ggml.eos_token_id'] === 'number' ? metadata['tokenizer.ggml.eos_token_id'] : undefined
-  return eosTokenId !== undefined && typeof tokens[eosTokenId] === 'string' ? tokens[eosTokenId] : undefined
+  const tokens = Array.isArray(metadata['tokenizer.ggml.tokens'])
+    ? metadata['tokenizer.ggml.tokens']
+    : []
+  const eosTokenId =
+    typeof metadata['tokenizer.ggml.eos_token_id'] === 'number'
+      ? metadata['tokenizer.ggml.eos_token_id']
+      : undefined
+  return eosTokenId !== undefined && typeof tokens[eosTokenId] === 'string'
+    ? tokens[eosTokenId]
+    : undefined
 }
 
 export async function buildModelProfileFromGguf(localPath: string): Promise<ModelProfile | null> {
@@ -89,7 +96,9 @@ export async function buildModelProfileFromGguf(localPath: string): Promise<Mode
 
     if (!isChatMlTemplate(chatTemplate)) return null
 
-    const stop = Array.from(new Set(['<|im_start|>', '<|im_end|>', ...(eosToken ? [eosToken] : [])]))
+    const stop = Array.from(
+      new Set(['<|im_start|>', '<|im_end|>', ...(eosToken ? [eosToken] : [])])
+    )
     log.info(`Falling back to ChatML runtime profile`, { localPath, stopCount: stop.length })
     return {
       schemaVersion: MODEL_PROFILE_SCHEMA_VERSION,
@@ -102,12 +111,17 @@ export async function buildModelProfileFromGguf(localPath: string): Promise<Mode
       ollamaParameters: { stop }
     }
   } catch (error) {
-    log.warn(`Failed to build model profile from ${localPath}: ${error instanceof Error ? error.message : String(error)}`)
+    log.warn(
+      `Failed to build model profile from ${localPath}: ${error instanceof Error ? error.message : String(error)}`
+    )
     return null
   }
 }
 
-export async function ensureModelProfile(name: string, modelInfo?: ModelShowResponse): Promise<ModelProfile | null> {
+export async function ensureModelProfile(
+  name: string,
+  modelInfo?: ModelShowResponse
+): Promise<ModelProfile | null> {
   const stored = getModelProfile(name)
   if (stored) {
     log.debug(`Using stored model profile for "${name}"`, {
@@ -160,7 +174,10 @@ export function renderPromptFromProfile(
   if (profile.runtimeFormat !== 'chatml') return null
 
   const prompt = messages
-    .filter((message) => message.role === 'system' || message.role === 'user' || message.role === 'assistant')
+    .filter(
+      (message) =>
+        message.role === 'system' || message.role === 'user' || message.role === 'assistant'
+    )
     .map((message) => `<|im_start|>${message.role}\n${message.content}<|im_end|>`)
     .join('\n')
 

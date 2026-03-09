@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Copy, Check, FolderOpen, RotateCcw, FileText, Sun, Moon, Monitor } from 'lucide-react'
+import {
+  ArrowLeft,
+  Copy,
+  Check,
+  FolderOpen,
+  RotateCcw,
+  FileText,
+  Sun,
+  Moon,
+  Monitor
+} from 'lucide-react'
 import { Button } from '@renderer/components/ui/button'
 import { Input } from '@renderer/components/ui/input'
 import { useOllamaStore } from '@renderer/stores/useOllamaStore'
@@ -10,7 +20,13 @@ interface SettingsProps {
   onBack: () => void
 }
 
-function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }): React.JSX.Element {
+function ToggleSwitch({
+  checked,
+  onChange
+}: {
+  checked: boolean
+  onChange: (v: boolean) => void
+}): React.JSX.Element {
   return (
     <button
       role="switch"
@@ -27,7 +43,11 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: b
 
 export function Settings({ onBack }: SettingsProps): React.JSX.Element {
   const { t, i18n } = useTranslation()
-  const [config, setConfig] = useState<OllamaConfig>({ ollamaHost: '127.0.0.1:11434', ollamaModelsDir: '', defaultModelsDir: '' })
+  const [config, setConfig] = useState<OllamaConfig>({
+    ollamaHost: '127.0.0.1:11434',
+    ollamaModelsDir: '',
+    defaultModelsDir: ''
+  })
   const [copied, setCopied] = useState(false)
   const [dirty, setDirty] = useState(false)
   const [needsRestart, setNeedsRestart] = useState(false)
@@ -142,7 +162,9 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-5">
         {/* Ollama Host & Port */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground">{t('settings.hostLabel')}</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            {t('settings.hostLabel')}
+          </label>
           <div className="flex items-center gap-2">
             <Input
               value={config.ollamaHost}
@@ -150,8 +172,18 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
               placeholder="127.0.0.1:11434"
               className="flex-1"
             />
-            <Button variant="outline" size="sm" onClick={handleCopy} className="h-8 w-8 p-0 shrink-0" title={apiUrl}>
-              {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopy}
+              className="h-8 w-8 p-0 shrink-0"
+              title={apiUrl}
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-emerald-500" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
             </Button>
           </div>
           <p className="text-[11px] text-muted-foreground">
@@ -161,7 +193,9 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
 
         {/* Models directory */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground">{t('settings.modelsDir')}</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            {t('settings.modelsDir')}
+          </label>
           <div className="flex items-center gap-2">
             <Input
               value={config.ollamaModelsDir}
@@ -181,20 +215,18 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
               <FolderOpen className="h-3.5 w-3.5" />
             </Button>
           </div>
-          <p className="text-[11px] text-muted-foreground">
-            {t('settings.modelsDirHint')}
-          </p>
+          <p className="text-[11px] text-muted-foreground">{t('settings.modelsDirHint')}</p>
         </div>
 
         {/* Theme */}
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-muted-foreground">{t('settings.theme')}</label>
           <div className="flex items-center gap-1">
-            {([
+            {[
               { value: 'system' as const, icon: Monitor, label: t('settings.themeSystem') },
               { value: 'light' as const, icon: Sun, label: t('settings.themeLight') },
               { value: 'dark' as const, icon: Moon, label: t('settings.themeDark') }
-            ]).map(({ value, icon: Icon, label }) => (
+            ].map(({ value, icon: Icon, label }) => (
               <Button
                 key={value}
                 variant={theme === value ? 'default' : 'outline'}
@@ -211,12 +243,14 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
 
         {/* Language */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground">{t('settings.language')}</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            {t('settings.language')}
+          </label>
           <div className="flex items-center gap-1">
-            {([
+            {[
               { value: 'en' as const, label: 'English' },
               { value: 'zh-CN' as const, label: '中文' }
-            ]).map(({ value, label }) => (
+            ].map(({ value, label }) => (
               <Button
                 key={value}
                 variant={language === value ? 'default' : 'outline'}
@@ -252,7 +286,9 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
         {/* Logs */}
         {logPath && (
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">{t('settings.logs')}</label>
+            <label className="text-xs font-medium text-muted-foreground">
+              {t('settings.logs')}
+            </label>
             <Button
               variant="outline"
               size="sm"

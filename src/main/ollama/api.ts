@@ -3,7 +3,16 @@ import { createHash } from 'crypto'
 import { basename } from 'path'
 import http from 'http'
 import https from 'https'
-import type { OllamaModel, PullProgress, RunningModel, ModelShowResponse, CreateFromModelRequest, ChatMessage, ChatToken, ModelProfile } from '../../shared/types'
+import type {
+  OllamaModel,
+  PullProgress,
+  RunningModel,
+  ModelShowResponse,
+  CreateFromModelRequest,
+  ChatMessage,
+  ChatToken,
+  ModelProfile
+} from '../../shared/types'
 import store from '../store'
 import { createLogger } from '../logger'
 import {
@@ -22,7 +31,11 @@ function getBaseUrl(): string {
   return host.startsWith('http') ? host : `http://${host}`
 }
 
-function summarizeMessages(messages: ChatMessage[]): { count: number; roles: string[]; imageMessages: number } {
+function summarizeMessages(messages: ChatMessage[]): {
+  count: number
+  roles: string[]
+  imageMessages: number
+} {
   return {
     count: messages.length,
     roles: messages.map((message) => message.role),
@@ -162,10 +175,7 @@ export async function pullModel(
   }
 }
 
-async function hashFile(
-  filePath: string,
-  onBytes?: (bytes: number) => void
-): Promise<string> {
+async function hashFile(filePath: string, onBytes?: (bytes: number) => void): Promise<string> {
   const fileSize = statSync(filePath).size
   log.info(`Hashing file: ${basename(filePath)} (${(fileSize / 1024 / 1024).toFixed(0)} MB)`)
   const start = Date.now()
@@ -210,7 +220,9 @@ async function ensureBlob(
 
   // Upload blob using http.request + pipe for proper backpressure
   const fileSize = statSync(filePath).size
-  log.info(`Uploading blob: ${basename(filePath)} (${(fileSize / 1024 / 1024).toFixed(0)} MB) → ${blobUrl}`)
+  log.info(
+    `Uploading blob: ${basename(filePath)} (${(fileSize / 1024 / 1024).toFixed(0)} MB) → ${blobUrl}`
+  )
   const start = Date.now()
   const parsed = new URL(blobUrl)
   const transport = parsed.protocol === 'https:' ? https : http
@@ -419,7 +431,11 @@ function emitTaggedText(
       const partial = getPartialTagSuffix(state.pending, tag)
       const emitText = partial ? state.pending.slice(0, -partial.length) : state.pending
       if (emitText) {
-        onToken(state.inThink ? { content: '', thinking: emitText, done: false } : { content: emitText, done: false })
+        onToken(
+          state.inThink
+            ? { content: '', thinking: emitText, done: false }
+            : { content: emitText, done: false }
+        )
       }
       state.pending = partial
       break
@@ -427,7 +443,11 @@ function emitTaggedText(
 
     const emitText = state.pending.slice(0, index)
     if (emitText) {
-      onToken(state.inThink ? { content: '', thinking: emitText, done: false } : { content: emitText, done: false })
+      onToken(
+        state.inThink
+          ? { content: '', thinking: emitText, done: false }
+          : { content: emitText, done: false }
+      )
     }
 
     state.pending = state.pending.slice(index + tag.length)
@@ -440,7 +460,11 @@ function flushTaggedText(
   onToken: (token: Omit<ChatToken, 'requestId'>) => void
 ): void {
   if (!state.pending) return
-  onToken(state.inThink ? { content: '', thinking: state.pending, done: true } : { content: state.pending, done: true })
+  onToken(
+    state.inThink
+      ? { content: '', thinking: state.pending, done: true }
+      : { content: state.pending, done: true }
+  )
   state.pending = ''
 }
 

@@ -15,7 +15,7 @@ test.describe('Model Import (GGUF)', () => {
     rmSync(TEMP_DIR, { recursive: true, force: true })
   })
 
-  test('imports a single GGUF file via IPC', async ({ mockServer, electronApp, page }) => {
+  test('imports a single GGUF file via IPC', async ({ mockServer, page }) => {
     // Create a small fake GGUF file
     const content = Buffer.from('GGUF-test-content-for-e2e-' + Date.now())
     const filePath = join(TEMP_DIR, 'test-model.gguf')
@@ -27,10 +27,10 @@ test.describe('Model Import (GGUF)', () => {
     await page.waitForTimeout(1500)
 
     // Invoke import via renderer's electronAPI
-    await page.evaluate(
-      ({ name, filePaths }) => window.electronAPI.importModel(name, filePaths),
-      { name: 'test-import', filePaths: [filePath] }
-    )
+    await page.evaluate(({ name, filePaths }) => window.electronAPI.importModel(name, filePaths), {
+      name: 'test-import',
+      filePaths: [filePath]
+    })
 
     // Wait for the import to complete (hashing + blob upload + create)
     await page.waitForTimeout(2000)
@@ -63,10 +63,10 @@ test.describe('Model Import (GGUF)', () => {
 
     await page.waitForTimeout(1500)
 
-    await page.evaluate(
-      ({ name, filePaths }) => window.electronAPI.importModel(name, filePaths),
-      { name: 'skip-upload-test', filePaths: [filePath] }
-    )
+    await page.evaluate(({ name, filePaths }) => window.electronAPI.importModel(name, filePaths), {
+      name: 'skip-upload-test',
+      filePaths: [filePath]
+    })
 
     await page.waitForTimeout(2000)
 

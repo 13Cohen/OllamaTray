@@ -101,7 +101,11 @@ function MarkdownContent({ content }: { content: string }): React.JSX.Element {
           )
         },
         th({ children }) {
-          return <th className="border border-border/50 px-2 py-1 bg-muted/50 text-left font-medium">{children}</th>
+          return (
+            <th className="border border-border/50 px-2 py-1 bg-muted/50 text-left font-medium">
+              {children}
+            </th>
+          )
         },
         td({ children }) {
           return <td className="border border-border/50 px-2 py-1">{children}</td>
@@ -147,10 +151,6 @@ export function ChatTest({ initialModel, onBack }: ChatTestProps): React.JSX.Ele
   const stopRequestedRef = useRef(false)
 
   useEffect(() => {
-    if (initialModel) setSelectedModel(initialModel)
-  }, [initialModel])
-
-  useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
   }, [messages, streamingContent, streamingThinking])
 
@@ -180,13 +180,16 @@ export function ChatTest({ initialModel, onBack }: ChatTestProps): React.JSX.Ele
     setStreaming(false)
   }, [])
 
-  const finalizeStreaming = useCallback((content: string, thinking: string) => {
-    if (content || thinking) {
-      const finalContent = thinking ? `<think>${thinking}</think>${content}` : content
-      setMessages((msgs) => [...msgs, { role: 'assistant', content: finalContent }])
-    }
-    resetStreamingState()
-  }, [resetStreamingState])
+  const finalizeStreaming = useCallback(
+    (content: string, thinking: string) => {
+      if (content || thinking) {
+        const finalContent = thinking ? `<think>${thinking}</think>${content}` : content
+        setMessages((msgs) => [...msgs, { role: 'assistant', content: finalContent }])
+      }
+      resetStreamingState()
+    },
+    [resetStreamingState]
+  )
 
   useEffect(() => {
     const unsubToken = window.electronAPI.onChatToken((token) => {
@@ -355,7 +358,13 @@ export function ChatTest({ initialModel, onBack }: ChatTestProps): React.JSX.Ele
             <Brain className="h-3.5 w-3.5" />
           </Button>
           {messages.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={handleClear} className="h-7 w-7 p-0" title={t('chat.clear')}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClear}
+              className="h-7 w-7 p-0"
+              title={t('chat.clear')}
+            >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           )}
@@ -371,7 +380,9 @@ export function ChatTest({ initialModel, onBack }: ChatTestProps): React.JSX.Ele
         >
           <option value="">{t('chat.selectModel')}</option>
           {models.map((m) => (
-            <option key={m.name} value={m.name}>{m.name}</option>
+            <option key={m.name} value={m.name}>
+              {m.name}
+            </option>
           ))}
         </select>
         <button
@@ -404,8 +415,12 @@ export function ChatTest({ initialModel, onBack }: ChatTestProps): React.JSX.Ele
                   <div className="max-w-[85%] space-y-1">
                     {thinking && (
                       <details className="text-[10px] text-muted-foreground">
-                        <summary className="cursor-pointer hover:text-foreground">{t('chat.thinking')}</summary>
-                        <div className="mt-1 pl-2 border-l border-border/50 whitespace-pre-wrap">{thinking}</div>
+                        <summary className="cursor-pointer hover:text-foreground">
+                          {t('chat.thinking')}
+                        </summary>
+                        <div className="mt-1 pl-2 border-l border-border/50 whitespace-pre-wrap">
+                          {thinking}
+                        </div>
                       </details>
                     )}
                     <div className="rounded-lg px-3 py-2 text-xs bg-muted break-words">
@@ -416,20 +431,26 @@ export function ChatTest({ initialModel, onBack }: ChatTestProps): React.JSX.Ele
               )
             }
             return (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div
+                key={i}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
                 <div className="max-w-[85%]">
                   {msg.images && msg.images.length > 0 && (
                     <div className="flex gap-1 mb-1 justify-end">
                       {msg.images.map((img, j) => (
-                        <img key={j} src={`data:image/png;base64,${img}`} alt="" className="h-16 rounded-md object-cover" />
+                        <img
+                          key={j}
+                          src={`data:image/png;base64,${img}`}
+                          alt=""
+                          className="h-16 rounded-md object-cover"
+                        />
                       ))}
                     </div>
                   )}
                   <div
                     className={`rounded-lg px-3 py-2 text-xs whitespace-pre-wrap break-words ${
-                      msg.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
+                      msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
                     }`}
                   >
                     {msg.content}
@@ -479,7 +500,11 @@ export function ChatTest({ initialModel, onBack }: ChatTestProps): React.JSX.Ele
         <div className="flex gap-1.5 px-3 pt-2 overflow-x-auto">
           {pendingImages.map((img, i) => (
             <div key={i} className="relative shrink-0">
-              <img src={`data:image/png;base64,${img}`} alt="" className="h-12 rounded-md object-cover" />
+              <img
+                src={`data:image/png;base64,${img}`}
+                alt=""
+                className="h-12 rounded-md object-cover"
+              />
               <button
                 onClick={() => setPendingImages((prev) => prev.filter((_, j) => j !== i))}
                 className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center"
@@ -525,7 +550,12 @@ export function ChatTest({ initialModel, onBack }: ChatTestProps): React.JSX.Ele
             <Square className="h-3.5 w-3.5" />
           </Button>
         ) : (
-          <Button size="sm" className="h-8 shrink-0" onClick={handleSend} disabled={!input.trim() || !selectedModel}>
+          <Button
+            size="sm"
+            className="h-8 shrink-0"
+            onClick={handleSend}
+            disabled={!input.trim() || !selectedModel}
+          >
             <Send className="h-3.5 w-3.5" />
           </Button>
         )}

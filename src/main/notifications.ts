@@ -20,7 +20,9 @@ export function notifyPullComplete(
   if (!shouldNotify(getWindow)) return
 
   const title = success ? 'Download Complete' : 'Download Failed'
-  const body = success ? `${modelName} is ready to use` : `${modelName}: ${error || 'Unknown error'}`
+  const body = success
+    ? `${modelName} is ready to use`
+    : `${modelName}: ${error || 'Unknown error'}`
 
   log.info(`Notification: ${title} - ${body}`)
   new Notification({ title, body }).show()
@@ -35,7 +37,9 @@ export function notifyImportComplete(
   if (!shouldNotify(getWindow)) return
 
   const title = success ? 'Import Complete' : 'Import Failed'
-  const body = success ? `${modelName} imported successfully` : `${modelName}: ${error || 'Unknown error'}`
+  const body = success
+    ? `${modelName} imported successfully`
+    : `${modelName}: ${error || 'Unknown error'}`
 
   log.info(`Notification: ${title} - ${body}`)
   new Notification({ title, body }).show()

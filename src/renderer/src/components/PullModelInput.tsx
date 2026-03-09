@@ -177,7 +177,13 @@ export function PullModelInput(): React.JSX.Element | null {
       <Button size="sm" className="h-8 shrink-0" onClick={handlePull} disabled={!modelName.trim()}>
         <Download className="h-3.5 w-3.5" />
       </Button>
-      <Button variant="outline" size="sm" className="h-8 shrink-0" onClick={handleScan} title={t('pull.importTooltip')}>
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-8 shrink-0"
+        onClick={handleScan}
+        title={t('pull.importTooltip')}
+      >
         <FolderSearch className="h-3.5 w-3.5" />
       </Button>
     </div>

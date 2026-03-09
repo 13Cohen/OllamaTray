@@ -206,7 +206,9 @@ app.whenReady().then(() => {
   window = createWindow()
 
   let intentionalStop = false
-  registerIpcHandlers(getWindow, () => { intentionalStop = true })
+  registerIpcHandlers(getWindow, () => {
+    intentionalStop = true
+  })
 
   ipcMain.handle(IPC.TOGGLE_PIN, () => {
     pinned = !pinned
